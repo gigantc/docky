@@ -87,6 +87,31 @@ export default function App() {
 
   const activeDoc = filtered.find((doc) => doc.path === activePath) || filtered[0]
 
+  const outline = useMemo(() => {
+    if (!activeDoc) return []
+    const lines = activeDoc.content.split('\n')
+    return lines
+      .map((line) => {
+        const match = line.match(/^(#{2,3})\s+(.*)$/)
+        if (!match) return null
+        return {
+          level: match[1].length,
+          text: match[2].trim(),
+        }
+      })
+      .filter(Boolean)
+  }, [activeDoc])
+
+  const backlinks = useMemo(() => {
+    if (!activeDoc) return []
+    const needle = activeDoc.title?.toLowerCase()
+    if (!needle) return []
+    return docs.filter((doc) => {
+      if (doc.path === activeDoc.path) return false
+      return doc.content.toLowerCase().includes(needle)
+    })
+  }, [docs, activeDoc])
+
   useEffect(() => {
     if (filtered.length && !filtered.find((doc) => doc.path === activePath)) {
       setActivePath(filtered[0].path)
@@ -218,12 +243,35 @@ export default function App() {
       <aside className="rightbar">
         <div className="rightbar__content">
           <div className="rightbar__section">
-            <div className="rightbar__title">Linked mentions</div>
-            <div className="rightbar__item">No backlinks found.</div>
+            <div className="rightbar__title">Outline</div>
+            {outline.length ? (
+              outline.map((item, index) => (
+                <div
+                  key={`${item.text}-${index}`}
+                  className={`rightbar__item rightbar__item--indent-${item.level}`}
+                >
+                  {item.text}
+                </div>
+              ))
+            ) : (
+              <div className="rightbar__item">No headings found.</div>
+            )}
           </div>
           <div className="rightbar__section">
-            <div className="rightbar__title">Unlinked mentions</div>
-            <div className="rightbar__item">—</div>
+            <div className="rightbar__title">Backlinks</div>
+            {backlinks.length ? (
+              backlinks.map((doc) => (
+                <button
+                  key={doc.path}
+                  className="rightbar__link"
+                  onClick={() => setActivePath(doc.path)}
+                >
+                  {doc.title}
+                </button>
+              ))
+            ) : (
+              <div className="rightbar__item">No backlinks found.</div>
+            )}
           </div>
         </div>
       </aside>
