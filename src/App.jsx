@@ -37,6 +37,35 @@ function parseFrontMatter(raw) {
   return { data, content }
 }
 
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+}
+
+function renderMarkdownWithOutline(content) {
+  const renderer = new marked.Renderer()
+  const outline = []
+  const counts = {}
+
+  renderer.heading = (text, level) => {
+    if (level < 2 || level > 3) {
+      return `<h${level}>${text}</h${level}>`
+    }
+
+    const base = slugify(text)
+    const count = (counts[base] = (counts[base] || 0) + 1)
+    const id = count > 1 ? `${base}-${count}` : base
+    outline.push({ level, text, id })
+    return `<h${level} id="${id}">${text}</h${level}>`
+  }
+
+  const html = marked.parse(content, { renderer })
+  return { html, outline }
+}
+
 function buildDocs(modules) {
   return Object.entries(modules).map(([path, raw]) => {
     const { data, content } = parseFrontMatter(raw)
@@ -47,6 +76,7 @@ function buildDocs(modules) {
     const title = data?.title || slug
     const created = data?.created || null
     const isJournal = path.includes('/docs/journal/')
+    const { html, outline } = renderMarkdownWithOutline(content)
 
     return {
       path,
@@ -54,7 +84,8 @@ function buildDocs(modules) {
       title,
       created,
       content,
-      html: marked.parse(content),
+      html,
+      outline,
       tags: Array.isArray(data?.tags) ? data.tags : [],
       isJournal,
     }
@@ -87,20 +118,7 @@ export default function App() {
 
   const activeDoc = filtered.find((doc) => doc.path === activePath) || filtered[0]
 
-  const outline = useMemo(() => {
-    if (!activeDoc) return []
-    const lines = activeDoc.content.split('\n')
-    return lines
-      .map((line) => {
-        const match = line.match(/^(#{2,3})\s+(.*)$/)
-        if (!match) return null
-        return {
-          level: match[1].length,
-          text: match[2].trim(),
-        }
-      })
-      .filter(Boolean)
-  }, [activeDoc])
+  const outline = activeDoc?.outline || []
 
   const backlinks = useMemo(() => {
     if (!activeDoc) return []
@@ -246,12 +264,18 @@ export default function App() {
             <div className="rightbar__title">Outline</div>
             {outline.length ? (
               outline.map((item, index) => (
-                <div
+                <button
                   key={`${item.text}-${index}`}
-                  className={`rightbar__item rightbar__item--indent-${item.level}`}
+                  className={`rightbar__outline rightbar__item--indent-${item.level}`}
+                  onClick={() => {
+                    const el = document.getElementById(item.id)
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
                 >
                   {item.text}
-                </div>
+                </button>
               ))
             ) : (
               <div className="rightbar__item">No headings found.</div>

@@ -16,6 +16,7 @@
 body {
   margin: 0;
   font-family: "Roboto", "Inter", system-ui, -apple-system, sans-serif;
+  font-weight: 300;
   background: var(--bg);
   color: var(--text);
 }
@@ -41,12 +42,13 @@ body {
 
 .brand__title {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .brand__subtitle {
   color: var(--muted);
   font-size: 12px;
+  font-weight: 300;
 }
 
 .search {
@@ -91,6 +93,7 @@ body {
   letter-spacing: 0.12em;
   color: var(--muted);
   padding: 0 4px;
+  font-weight: 400;
 }
 
 .doc-list__item {
@@ -125,7 +128,7 @@ body {
 }
 
 .doc-list__title {
-  font-weight: 500;
+  font-weight: 300;
   font-size: 12px;
 }
 
@@ -153,7 +156,7 @@ body {
 .doc__header h1 {
   margin: 0 0 8px;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .doc__date {
@@ -187,6 +190,7 @@ body {
 .doc__content h2,
 .doc__content h3 {
   margin-top: 22px;
+  font-weight: 400;
 }
 
 .doc__content a {
@@ -239,7 +243,7 @@ body {
   color: var(--text);
   font-size: 12px;
   margin-bottom: 8px;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .rightbar__item {
@@ -267,6 +271,7 @@ body {
   cursor: pointer;
   transition: 0.15s ease;
   outline: none;
+  font-weight: 300;
 }
 
 .rightbar__link:hover {
@@ -275,6 +280,32 @@ body {
 
 .rightbar__link:focus,
 .rightbar__link:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.rightbar__outline {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+  transition: 0.15s ease;
+  outline: none;
+  font-weight: 300;
+}
+
+.rightbar__outline:hover {
+  background: #2a2a2a;
+}
+
+.rightbar__outline:focus,
+.rightbar__outline:focus-visible {
   outline: none;
   box-shadow: none;
 }
