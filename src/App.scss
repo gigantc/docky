@@ -206,6 +206,18 @@ body {
   padding: 20px 16px;
   color: var(--muted);
   font-size: 12px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+}
+
+.rightbar__content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .rightbar__section {
