@@ -1,4 +1,7 @@
 # Docky
+
+## Environment
+Copy `.env.example` to `.env` and fill in your Firebase web config.
 An App that keeps track of things I do with my Moltbot Rocky.
 
 A Vite + React + Sass app that renders markdown docs from `/docs`.
