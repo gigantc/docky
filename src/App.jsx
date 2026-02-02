@@ -16,7 +16,7 @@ import {
   deleteDoc,
   onSnapshot,
   orderBy,
-  query,
+  fsQuery,
   serverTimestamp,
 } from './firebase'
 
@@ -241,7 +241,7 @@ export default function App() {
       return undefined
     }
 
-    const notesQuery = query(collection(db, 'notes'), orderBy('updatedAt', 'desc'))
+    const notesQuery = fsQuery(collection(db, 'notes'), orderBy('updatedAt', 'desc'))
     return onSnapshot(notesQuery, (snapshot) => {
       const nextDocs = snapshot.docs.map((snap) => {
         const data = snap.data() || {}

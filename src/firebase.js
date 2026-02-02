@@ -15,7 +15,7 @@ import {
   deleteDoc,
   onSnapshot,
   orderBy,
-  query,
+  query as fsQuery,
   serverTimestamp,
 } from 'firebase/firestore'
 
@@ -46,6 +46,6 @@ export {
   deleteDoc,
   onSnapshot,
   orderBy,
-  query,
+  fsQuery,
   serverTimestamp,
 }
