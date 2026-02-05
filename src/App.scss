@@ -284,6 +284,53 @@ body {
   letter-spacing: 0.01em;
 }
 
+.list__title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.list__title-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.list__title-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.list__title-input {
+  min-width: 240px;
+  padding: 8px 10px;
+  border-radius: var(--radius-m);
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.list__rename,
+.list__rename-save,
+.list__rename-cancel {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.list__rename:hover,
+.list__rename-save:hover,
+.list__rename-cancel:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .list__delete {
   border: 1px solid rgba(255, 107, 107, 0.45);
   background: transparent;

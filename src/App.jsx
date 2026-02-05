@@ -324,6 +324,8 @@ export default function App() {
   const [activeListId, setActiveListId] = useState(null)
   const [listsLoaded, setListsLoaded] = useState(false)
   const [newItemText, setNewItemText] = useState('')
+  const [isEditingListTitle, setIsEditingListTitle] = useState(false)
+  const [listTitleDraft, setListTitleDraft] = useState('')
   const [confirmDialog, setConfirmDialog] = useState(null)
   const notesRef = useRef(null)
   const listsRef = useRef(null)
@@ -563,6 +565,16 @@ export default function App() {
     })
   }
 
+  const handleRenameList = async () => {
+    if (!activeListId) return
+    const nextTitle = listTitleDraft.trim() || 'Untitled List'
+    await updateDoc(doc(db, 'lists', activeListId), {
+      title: nextTitle,
+      updatedAt: serverTimestamp(),
+    })
+    setIsEditingListTitle(false)
+  }
+
   const handleAddListItem = async () => {
     if (!activeListId || !newItemText.trim()) return
     const list = firestoreLists.find((item) => item.id === activeListId)
@@ -701,6 +713,17 @@ export default function App() {
     ? null
     : filtered.find((doc) => doc.path === activePath) || filtered[0]
   const activeList = firestoreLists.find((list) => list.id === activeListId) || null
+
+  useEffect(() => {
+    if (!activeList) {
+      setIsEditingListTitle(false)
+      setListTitleDraft('')
+      return
+    }
+    setIsEditingListTitle(false)
+    setListTitleDraft(activeList.title || '')
+  }, [activeListId, activeList?.title])
+
   const listStats = useMemo(() => {
     if (!activeList) return null
     const total = activeList.items?.length || 0
@@ -1252,8 +1275,59 @@ export default function App() {
         {activeList ? (
           <article className="list">
             <header className="list__header">
-              <div>
-                <h1>{activeList.title}</h1>
+              <div className="list__title">
+                {isEditingListTitle ? (
+                  <div className="list__title-edit">
+                    <input
+                      className="list__title-input"
+                      type="text"
+                      value={listTitleDraft}
+                      onChange={(event) => setListTitleDraft(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault()
+                          handleRenameList()
+                        }
+                        if (event.key === 'Escape') {
+                          event.preventDefault()
+                          setIsEditingListTitle(false)
+                          setListTitleDraft(activeList.title || '')
+                        }
+                      }}
+                    />
+                    <button
+                      className="list__rename-save"
+                      type="button"
+                      onClick={handleRenameList}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="list__rename-cancel"
+                      type="button"
+                      onClick={() => {
+                        setIsEditingListTitle(false)
+                        setListTitleDraft(activeList.title || '')
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="list__title-display">
+                    <h1>{activeList.title}</h1>
+                    <button
+                      className="list__rename"
+                      type="button"
+                      onClick={() => {
+                        setIsEditingListTitle(true)
+                        setListTitleDraft(activeList.title || '')
+                      }}
+                    >
+                      Rename
+                    </button>
+                  </div>
+                )}
                 <div className="list__meta">
                   {listStats?.completed ?? 0} of {listStats?.total ?? 0} done
                 </div>
