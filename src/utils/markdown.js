@@ -1,10 +1,13 @@
 import { marked } from 'marked'
 import { slugify } from './string'
 
+const FRONT_MATTER_REGEX = /^---\s*\r?\n[\s\S]*?\r?\n---\s*\r?\n/
+
 export function renderMarkdownWithOutline(content) {
   const renderer = new marked.Renderer()
   const outline = []
   const counts = {}
+  const cleaned = content.replace(FRONT_MATTER_REGEX, '')
 
   renderer.heading = (token) => {
     const level = token.depth ?? token.level
@@ -21,7 +24,7 @@ export function renderMarkdownWithOutline(content) {
     return `<h${level} id="${id}">${text}</h${level}>`
   }
 
-  const html = marked.parse(content, { renderer })
+  const html = marked.parse(cleaned, { renderer })
   return { html, outline }
 }
 
