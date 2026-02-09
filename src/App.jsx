@@ -33,40 +33,6 @@ import {
   serverTimestamp,
 } from './firebase'
 
-const docModules = import.meta.glob('../docs/**/*.md', { query: '?raw', import: 'default', eager: true })
-
-function parseFrontMatter(raw) {
-  if (!raw.startsWith('---')) {
-    return { data: {}, content: raw }
-  }
-
-  const end = raw.indexOf('\n---', 3)
-  if (end === -1) {
-    return { data: {}, content: raw }
-  }
-
-  const matterBlock = raw.slice(3, end).trim()
-  const content = raw.slice(end + 4).trimStart()
-  const data = {}
-
-  matterBlock.split('\n').forEach((line) => {
-    const [key, ...rest] = line.split(':')
-    if (!key) return
-    const value = rest.join(':').trim()
-    if (!value) return
-
-    if (key.trim() === 'tags') {
-      const match = value.match(/\[(.*)\]/)
-      data.tags = match
-        ? match[1].split(',').map((tag) => tag.trim()).filter(Boolean)
-        : value.split(',').map((tag) => tag.trim()).filter(Boolean)
-    } else {
-      data[key.trim()] = value.replace(/^"|"$/g, '')
-    }
-  })
-
-  return { data, content }
-}
 
 function extractInlineTags(content) {
   const matches = content.match(/(^|\s)#([a-z0-9_-]+)/gi) || []
@@ -131,19 +97,6 @@ function buildSnippet(content, needle, maxLen = 120) {
   return `${start > 0 ? '…' : ''}${snippet}${end < clean.length ? '…' : ''}`
 }
 
-function buildChecklistItems(content) {
-  const lines = content.split('\n')
-  return lines
-    .map((line) => line.match(/^\s*- \[(x| )\]\s+(.*)$/i))
-    .filter(Boolean)
-    .map((match) => ({
-      id: createId(),
-      text: match[2].trim(),
-      completed: match[1].toLowerCase() === 'x',
-      createdAt: Date.now(),
-    }))
-}
-
 function parseBriefMarkets(content) {
   const lines = content.split('\n')
   const keys = ['S&P 500', 'Nasdaq', 'Dow', 'BTC', 'ETH']
@@ -156,11 +109,6 @@ function parseBriefMarkets(content) {
     })
   })
   return results
-}
-
-function getBriefDateFromPath(path) {
-  const match = path.match(/(\d{4}-\d{2}-\d{2})-brief\.md$/)
-  return match ? match[1] : null
 }
 
 function formatDate(value) {
@@ -240,40 +188,6 @@ function SortableListItem({ item, onToggle, onDelete }) {
   )
 }
 
-function buildDocs(modules) {
-  return Object.entries(modules).map(([path, raw]) => {
-    const { data, content } = parseFrontMatter(raw)
-    const slug = path
-      .replace('../docs/', '')
-      .replace(/\.md$/, '')
-      .replace(/\//g, ' / ')
-    const title = data?.title || slug
-    const created = data?.created || null
-    const updated = data?.updated || null
-    const isJournal = path.includes('/docs/journal/')
-    const isBrief = path.includes('/docs/briefs/') && !path.endsWith('/docs/briefs/README.md')
-    const { html, outline } = renderMarkdownWithOutline(content)
-
-    const frontMatterTags = Array.isArray(data?.tags) ? data.tags : []
-    const inlineTags = extractInlineTags(content)
-    const tags = uniqueTags([...frontMatterTags, ...inlineTags])
-
-    return {
-      path,
-      slug,
-      title,
-      created,
-      updated,
-      content,
-      html,
-      outline,
-      tags,
-      isJournal,
-      isBrief,
-    }
-  })
-}
-
 function sortDocs(docs) {
   return [...docs].sort((a, b) => {
     const aDate = a.updated || a.created
@@ -286,23 +200,9 @@ function sortDocs(docs) {
 }
 
 export default function App() {
-  const localDocs = useMemo(() => sortDocs(buildDocs(docModules)), [])
   const [firestoreDocs, setFirestoreDocs] = useState([])
   const [firestoreLists, setFirestoreLists] = useState([])
-  const hasFirestoreNotes = firestoreDocs.some((doc) => !doc.isJournal && !doc.isBrief)
-  const hasFirestoreJournals = firestoreDocs.some((doc) => doc.isJournal)
-  const hasFirestoreBriefs = firestoreDocs.some((doc) => doc.isBrief)
-  const visibleLocalDocs = useMemo(() => {
-    const ignorePaths = new Set(['../docs/notes/roadmap.md'])
-    return localDocs.filter((doc) => {
-      if (ignorePaths.has(doc.path)) return false
-      if (doc.isBrief && hasFirestoreBriefs) return false
-      if (doc.isJournal && hasFirestoreJournals) return false
-      if (!doc.isJournal && !doc.isBrief && doc.path.includes('/docs/notes/') && hasFirestoreNotes) return false
-      return true
-    })
-  }, [localDocs, hasFirestoreNotes, hasFirestoreJournals, hasFirestoreBriefs])
-  const docs = useMemo(() => sortDocs([...visibleLocalDocs, ...firestoreDocs]), [visibleLocalDocs, firestoreDocs])
+  const docs = useMemo(() => sortDocs(firestoreDocs), [firestoreDocs])
   const [query, setQuery] = useState('')
   const [activePath, setActivePath] = useState(docs[0]?.path)
   const [activeHeadingId, setActiveHeadingId] = useState(null)
@@ -322,7 +222,6 @@ export default function App() {
   const [listTitle, setListTitle] = useState('')
   const [listSaving, setListSaving] = useState(false)
   const [activeListId, setActiveListId] = useState(null)
-  const [listsLoaded, setListsLoaded] = useState(false)
   const [newItemText, setNewItemText] = useState('')
   const [isEditingListTitle, setIsEditingListTitle] = useState(false)
   const [listTitleDraft, setListTitleDraft] = useState('')
@@ -332,7 +231,6 @@ export default function App() {
   const journalRef = useRef(null)
   const briefsRef = useRef(null)
   const searchRef = useRef(null)
-  const seedListRef = useRef(false)
 
   useEffect(() => onAuthStateChanged(auth, (nextUser) => {
     setUser(nextUser)
@@ -393,7 +291,6 @@ export default function App() {
   useEffect(() => {
     if (!user) {
       setFirestoreLists([])
-      setListsLoaded(false)
       return undefined
     }
 
@@ -414,7 +311,6 @@ export default function App() {
         }
       })
       setFirestoreLists(nextLists)
-      setListsLoaded(true)
     })
   }, [user])
 
@@ -429,24 +325,6 @@ export default function App() {
       setConfirmDialog(null)
     }
   }, [activeListId])
-
-  useEffect(() => {
-    if (!user) return
-    if (!listsLoaded) return
-    if (seedListRef.current) return
-    if (firestoreLists.some((list) => list.title === 'Docky Roadmap')) return
-    const roadmapDoc = localDocs.find((doc) => doc.path.includes('/docs/notes/roadmap.md'))
-    if (!roadmapDoc) return
-    const items = buildChecklistItems(roadmapDoc.content)
-    if (!items.length) return
-    seedListRef.current = true
-    addDoc(collection(db, 'lists'), {
-      title: 'Docky Roadmap',
-      items,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    })
-  }, [user, listsLoaded, firestoreLists, localDocs])
 
   useEffect(() => {
     if (!docs.length || activeListId) return
@@ -479,7 +357,7 @@ export default function App() {
 
   const openEditor = (docItem) => {
     if (!user) return
-    if (docItem?.source === 'firestore') {
+    if (docItem) {
       setEditorId(docItem.id)
       setEditorTitle(docItem.title)
       setEditorContent(docItem.content)
@@ -807,18 +685,16 @@ export default function App() {
   }, [docs, activeDoc])
 
   const briefCompare = useMemo(() => {
-    if (!activeDoc?.path?.includes('/docs/briefs/')) return null
-    if (activeDoc.path.endsWith('README.md')) return null
+    if (!activeDoc?.isBrief) return null
     const briefDocs = docs
-      .map((doc) => ({ doc, date: getBriefDateFromPath(doc.path) }))
-      .filter((item) => item.date)
-      .sort((a, b) => a.date.localeCompare(b.date))
+      .filter((doc) => doc.isBrief && doc.created)
+      .sort((a, b) => a.created.localeCompare(b.created))
 
-    const index = briefDocs.findIndex((item) => item.doc.path === activeDoc.path)
+    const index = briefDocs.findIndex((item) => item.path === activeDoc.path)
     if (index <= 0) return null
 
-    const today = briefDocs[index].doc
-    const yesterday = briefDocs[index - 1].doc
+    const today = briefDocs[index]
+    const yesterday = briefDocs[index - 1]
 
     return {
       today,
@@ -919,15 +795,10 @@ export default function App() {
 
   const grouped = useMemo(() => {
     const excludedNoteTitles = new Set(['Brief Archive', 'Docky Docs'])
-    const excludedNotePaths = new Set([
-      '../docs/briefs/README.md',
-      '../docs/README.md',
-      '../docs/notes/roadmap.md',
-    ])
     const journals = filtered.filter((doc) => doc.isJournal)
     const briefs = filtered.filter((doc) => doc.isBrief)
     const notes = filtered.filter((doc) => !doc.isJournal && !doc.isBrief)
-      .filter((doc) => !excludedNoteTitles.has(doc.title) && !excludedNotePaths.has(doc.path))
+      .filter((doc) => !excludedNoteTitles.has(doc.title))
     return { journals, briefs, notes }
   }, [filtered])
 
@@ -1446,7 +1317,7 @@ export default function App() {
                     ))}
                   </div>
                 )}
-                {user && activeDoc.source === 'firestore' && !activeDoc.isBrief && (
+                {user && !activeDoc.isBrief && (
                   <div className="doc__actions">
                     <button className="doc__button" onClick={() => openEditor(activeDoc)}>
                       Edit Note
@@ -1454,7 +1325,7 @@ export default function App() {
                   </div>
                 )}
               </div>
-              {user && activeDoc.source === 'firestore' && activeDoc.isBrief && (
+              {user && activeDoc.isBrief && (
                 <button
                   className="list__delete"
                   type="button"
@@ -1534,10 +1405,10 @@ export default function App() {
                 <div className="rightbar__section">
                   <div className="rightbar__title">Yesterday vs Today</div>
                   <div className="rightbar__item">
-                    Today: {getBriefDateFromPath(briefCompare.today.path)}
+                    Today: {briefCompare.today.created}
                   </div>
                   <div className="rightbar__item">
-                    Yesterday: {getBriefDateFromPath(briefCompare.yesterday.path)}
+                    Yesterday: {briefCompare.yesterday.created}
                   </div>
                   {['S&P 500', 'Nasdaq', 'Dow', 'BTC', 'ETH'].map((key) => (
                     <div key={key} className="rightbar__snippet">
