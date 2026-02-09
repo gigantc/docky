@@ -1,0 +1,22 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+.modal--editor {
+  width: min(720px, 92vw);
+}
+
+.modal__label {
+  display: block;
+  font-size: v.$fs-sm;
+  color: v.$muted;
+  margin: 12px 0 6px;
+}
+
+.modal__input,
+.modal__textarea {
+  @include m.input-field;
+}
+
+.modal__textarea {
+  resize: vertical;
+}

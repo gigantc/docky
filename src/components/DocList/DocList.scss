@@ -1,0 +1,113 @@
+@use '../../styles/variables' as v;
+
+.doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-right: 6px;
+  flex: 1;
+}
+
+.doc-list__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.doc-list__heading {
+  font-size: v.$fs-sm;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: v.$on-accent;
+  padding: 8px 10px;
+  font-weight: 540;
+  background: v.$heading-gradient;
+  border-radius: v.$radius-m;
+  box-shadow: v.$elevation-1;
+}
+
+.doc-list__heading--toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  transition: v.$transition-normal;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: v.$ring-soft;
+  }
+}
+
+.doc-list__chevron {
+  display: inline-block;
+  font-size: v.$fs-base;
+  transform: rotate(-90deg);
+  transition: transform v.$transition-fast;
+
+  &.is-open {
+    transform: rotate(0deg);
+  }
+}
+
+.doc-list__content {
+  overflow: hidden;
+  width: 100%;
+}
+
+.doc-list__item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: v.$radius-m;
+  color: v.$text;
+  cursor: pointer;
+  transition: v.$transition-normal;
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+
+  &:hover {
+    background: v.$surface-3;
+  }
+
+  &:focus,
+  &:focus-visible,
+  &:active {
+    outline: none;
+    box-shadow: v.$ring-soft;
+  }
+
+  &.is-active {
+    background: v.$surface-4;
+    border: 1px solid v.$accent-alpha-35;
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+.doc-list__title {
+  font-weight: v.$fw-medium;
+  font-size: v.$fs-md;
+}
+
+.doc-list__meta {
+  color: v.$muted;
+  font-size: v.$fs-sm;
+  margin-top: 4px;
+}
+
+.doc-list__empty {
+  color: v.$muted;
+  padding: 12px;
+}

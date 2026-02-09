@@ -1,0 +1,127 @@
+@use '../../styles/variables' as v;
+
+.doc {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.doc__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.doc__title {
+  display: flex;
+  flex-direction: column;
+}
+
+.doc__header h1 {
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: v.$fw-bold;
+  letter-spacing: 0.01em;
+}
+
+.doc__date {
+  color: v.$muted;
+  font-size: v.$fs-base;
+  margin-bottom: 8px;
+}
+
+.doc__tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.doc__actions {
+  margin-top: 12px;
+}
+
+.doc__button {
+  padding: 8px 12px;
+  border-radius: v.$radius-pill;
+  border: 1px solid v.$border;
+  background: v.$surface-2;
+  color: v.$text;
+  font-size: v.$fs-sm;
+  cursor: pointer;
+
+  &:hover {
+    background: v.$surface-3;
+  }
+}
+
+.doc__brief-delete {
+  border: 1px solid v.$danger-alpha-45;
+  background: transparent;
+  color: v.$danger;
+  padding: 8px 14px;
+  border-radius: v.$radius-pill;
+  font-size: v.$fs-sm;
+  cursor: pointer;
+
+  &:hover {
+    background: v.$danger-alpha-12;
+  }
+}
+
+.doc__content {
+  margin-top: 22px;
+  line-height: 1.7;
+  color: v.$text;
+  font-size: 14px;
+}
+
+.doc__content h2,
+.doc__content h3 {
+  margin-top: 26px;
+  font-weight: v.$fw-semi;
+}
+
+.doc__content ul {
+  padding-left: 0;
+  list-style: none;
+}
+
+.doc__content li {
+  margin-bottom: 12px;
+}
+
+.doc__content input[type="checkbox"] {
+  margin-right: 8px;
+  accent-color: v.$accent;
+}
+
+.doc__content a {
+  color: v.$accent-2;
+  text-decoration: none;
+  border-bottom: 1px solid v.$border-alpha-40;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.doc__content .source {
+  font-size: v.$fs-sm;
+  display: inline-block;
+  color: v.$muted;
+}
+
+.doc__content code {
+  background: v.$code-bg;
+  border: 1px solid v.$border;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
+.doc__content pre {
+  background: v.$code-bg-dark;
+  padding: 16px;
+  border-radius: v.$radius-m;
+  border: 1px solid v.$border;
+  overflow: auto;
+}

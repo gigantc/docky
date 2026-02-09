@@ -1,0 +1,13 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+.modal__label {
+  display: block;
+  font-size: v.$fs-sm;
+  color: v.$muted;
+  margin: 12px 0 6px;
+}
+
+.modal__input {
+  @include m.input-field;
+}

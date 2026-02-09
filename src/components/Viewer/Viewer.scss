@@ -1,0 +1,14 @@
+@use '../../styles/variables' as v;
+
+.viewer {
+  grid-area: viewer;
+  padding: 36px 44px;
+  border-right: 1px solid v.$border;
+  min-height: 0;
+  overflow-y: auto;
+  background: v.$gradient-bg, v.$bg;
+}
+
+.empty {
+  color: v.$muted;
+}

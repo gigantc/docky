@@ -1,0 +1,117 @@
+@use '../../styles/variables' as v;
+
+.rightbar {
+  grid-area: rightbar;
+  background: v.$surface;
+  padding: 22px 18px;
+  color: v.$muted;
+  font-size: v.$fs-base;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.rightbar__content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rightbar__section {
+  margin-bottom: 18px;
+  padding: 14px;
+  border-radius: v.$radius-m;
+  background: v.$surface-2;
+  border: 1px solid v.$accent-border-12;
+}
+
+.rightbar__title {
+  color: v.$text;
+  font-size: v.$fs-base;
+  margin-bottom: 8px;
+  font-weight: v.$fw-bold;
+}
+
+.rightbar__item {
+  margin-bottom: 6px;
+}
+
+.rightbar__item--indent-2 {
+  padding-left: 8px;
+}
+
+.rightbar__item--indent-3 {
+  padding-left: 16px;
+}
+
+.rightbar__backlink {
+  margin-bottom: 10px;
+}
+
+.rightbar__link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  background: none;
+  border: none;
+  border-radius: v.$radius-s;
+  color: v.$text;
+  cursor: pointer;
+  transition: v.$transition-fast;
+  outline: none;
+  font-weight: v.$fw-medium;
+
+  &:hover {
+    background: v.$surface-3;
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: v.$ring-soft;
+  }
+}
+
+.rightbar__snippet {
+  color: v.$muted;
+  font-size: v.$fs-sm;
+  line-height: 1.4;
+  padding: 0 8px;
+}
+
+.rightbar__snippet strong {
+  color: v.$text;
+  font-weight: v.$fw-semi;
+}
+
+.rightbar__outline {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  background: none;
+  border: none;
+  border-radius: v.$radius-s;
+  color: v.$text;
+  cursor: pointer;
+  transition: v.$transition-fast;
+  outline: none;
+  font-weight: v.$fw-medium;
+
+  &:hover {
+    background: v.$surface-3;
+  }
+
+  &.is-active {
+    background: v.$accent-alpha-25;
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: v.$ring-soft;
+  }
+}

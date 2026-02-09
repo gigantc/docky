@@ -1,0 +1,13 @@
+@use '../../styles/variables' as v;
+
+.modal__item {
+  display: flex;
+  justify-content: space-between;
+  font-size: v.$fs-base;
+  color: v.$muted;
+  padding: 6px 0;
+}
+
+.modal__item span {
+  color: v.$text;
+}

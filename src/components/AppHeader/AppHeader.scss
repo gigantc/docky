@@ -1,0 +1,82 @@
+@use '../../styles/variables' as v;
+
+.app-header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: nowrap;
+  padding: 12px 20px;
+  background: v.$surface;
+  border-bottom: 1px solid v.$border;
+  box-shadow: v.$elevation-1;
+}
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.app-header .primary-button {
+  width: auto;
+}
+
+.app-header .auth {
+  padding: 8px 12px;
+}
+
+.brand__title {
+  font-size: v.$fs-lg;
+  font-weight: v.$fw-semi;
+  letter-spacing: 0.01em;
+}
+
+.brand__subtitle {
+  color: v.$muted;
+  font-size: v.$fs-base;
+  font-weight: 380;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: v.$radius-pill;
+  border: 1px solid v.$border;
+  background: v.$surface-2;
+  color: v.$text;
+  font-size: v.$fs-sm;
+  font-weight: v.$fw-bold;
+  cursor: pointer;
+  transition: v.$transition-fast;
+}
+
+.icon-button svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.icon-button:hover {
+  background: v.$surface-3;
+}
+
+.icon-button:focus,
+.icon-button:focus-visible {
+  outline: none;
+  box-shadow: v.$ring-soft;
+}
+
+.icon-button--primary {
+  border-color: v.$accent-alpha-70;
+  color: v.$on-accent;
+  background: v.$accent-alpha-22;
+}
+
+.icon-button--primary:hover {
+  background: v.$accent-alpha-32;
+}

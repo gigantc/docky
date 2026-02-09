@@ -1,0 +1,19 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+.search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search__input {
+  @include m.input-field;
+}
+
+.search__hint {
+  font-size: v.$fs-sm;
+  color: v.$muted;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}

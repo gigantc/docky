@@ -1,0 +1,17 @@
+@use '../../styles/variables' as v;
+
+.modal--confirm {
+  width: min(360px, 90vw);
+}
+
+.modal__body {
+  font-size: v.$fs-md;
+  color: v.$muted;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.modal__body strong {
+  color: v.$text;
+  font-weight: v.$fw-bold;
+}

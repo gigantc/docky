@@ -1,27 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { marked } from 'marked'
 import { gsap } from 'gsap'
-import {
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { arrayMove } from '@dnd-kit/sortable'
 import './App.scss'
 import {
   auth,
   db,
   onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
   collection,
   addDoc,
   doc,
@@ -32,172 +16,19 @@ import {
   fsQuery,
   serverTimestamp,
 } from './firebase'
-
-
-function extractInlineTags(content) {
-  const matches = content.match(/(^|\s)#([a-z0-9_-]+)/gi) || []
-  return matches.map((tag) => tag.replace(/^\s*#/, '').trim())
-}
-
-function uniqueTags(tags) {
-  const seen = new Set()
-  return tags.filter((tag) => {
-    const normalized = tag.toLowerCase()
-    if (seen.has(normalized)) return false
-    seen.add(normalized)
-    return true
-  })
-}
-
-function slugify(text) {
-  return String(text ?? '')
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-}
-
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-function createId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
-function highlightText(text, query) {
-  if (!query) return text
-  const safeQuery = escapeRegExp(query)
-  if (!safeQuery) return text
-  const regex = new RegExp(`(${safeQuery})`, 'ig')
-  const parts = String(text).split(regex)
-  return parts.map((part, index) =>
-    index % 2 === 1 ? (
-      <mark key={`${part}-${index}`} className="highlight">
-        {part}
-      </mark>
-    ) : (
-      part
-    )
-  )
-}
-
-function buildSnippet(content, needle, maxLen = 120) {
-  if (!needle) return ''
-  const clean = content.replace(/\s+/g, ' ').trim()
-  const lower = clean.toLowerCase()
-  const index = lower.indexOf(needle.toLowerCase())
-  if (index === -1) return clean.slice(0, maxLen).trim()
-  const start = Math.max(0, index - 40)
-  const end = Math.min(clean.length, index + needle.length + 60)
-  const snippet = clean.slice(start, end).trim()
-  return `${start > 0 ? '…' : ''}${snippet}${end < clean.length ? '…' : ''}`
-}
-
-function parseBriefMarkets(content) {
-  const lines = content.split('\n')
-  const keys = ['S&P 500', 'Nasdaq', 'Dow', 'BTC', 'ETH']
-  const results = {}
-  lines.forEach((line) => {
-    keys.forEach((key) => {
-      if (line.includes(`**${key}**`)) {
-        results[key] = line.replace(/^-\s*/, '').trim()
-      }
-    })
-  })
-  return results
-}
-
-function formatDate(value) {
-  if (!value) return null
-  const date = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(date.getTime())) return null
-  return date.toISOString().slice(0, 10)
-}
-
-function renderMarkdownWithOutline(content) {
-  const renderer = new marked.Renderer()
-  const outline = []
-  const counts = {}
-
-  renderer.heading = (token) => {
-    const level = token.depth ?? token.level
-    const text = token.text ?? ''
-
-    if (level < 2 || level > 3) {
-      return `<h${level}>${text}</h${level}>`
-    }
-
-    const base = slugify(text)
-    const count = (counts[base] = (counts[base] || 0) + 1)
-    const id = count > 1 ? `${base}-${count}` : base
-    outline.push({ level, text, id })
-    return `<h${level} id="${id}">${text}</h${level}>`
-  }
-
-  const html = marked.parse(content, { renderer })
-  return { html, outline }
-}
-
-function SortableListItem({ item, onToggle, onDelete }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
-  return (
-    <li
-      ref={setNodeRef}
-      style={style}
-      data-item-id={item.id}
-      className={`list-item list-item--sortable ${item.completed ? 'is-complete' : ''} ${isDragging ? 'is-dragging' : ''}`}
-      {...attributes}
-      {...listeners}
-    >
-      <span className="list-item__swipe" aria-hidden="true" />
-      <button
-        className="list-item__checkbox"
-        type="button"
-        onClick={onToggle}
-        aria-pressed={item.completed}
-      >
-        <span className="list-item__check" />
-      </button>
-      <span className="list-item__text">{item.text}</span>
-      <button
-        className="list-item__delete"
-        type="button"
-        onClick={onDelete}
-        aria-label="Delete item"
-      >
-        ×
-      </button>
-    </li>
-  )
-}
-
-function sortDocs(docs) {
-  return [...docs].sort((a, b) => {
-    const aDate = a.updated || a.created
-    const bDate = b.updated || b.created
-    if (aDate && bDate) return String(bDate).localeCompare(String(aDate))
-    if (aDate) return -1
-    if (bDate) return 1
-    return a.title.localeCompare(b.title)
-  })
-}
+import { extractInlineTags, uniqueTags } from './utils/tags'
+import { buildSnippet } from './utils/string.jsx'
+import { renderMarkdownWithOutline, parseBriefMarkets } from './utils/markdown'
+import { formatDate } from './utils/date'
+import { createId, sortDocs } from './utils/helpers'
+import EditorModal from './components/EditorModal/EditorModal'
+import NewListModal from './components/NewListModal/NewListModal'
+import ConfirmDialog from './components/ConfirmDialog/ConfirmDialog'
+import ShortcutsModal from './components/ShortcutsModal/ShortcutsModal'
+import AppHeader from './components/AppHeader/AppHeader'
+import Rightbar from './components/Rightbar/Rightbar'
+import Sidebar from './components/Sidebar/Sidebar'
+import Viewer from './components/Viewer/Viewer'
 
 export default function App() {
   const [firestoreDocs, setFirestoreDocs] = useState([])
@@ -205,13 +36,9 @@ export default function App() {
   const docs = useMemo(() => sortDocs(firestoreDocs), [firestoreDocs])
   const [query, setQuery] = useState('')
   const [activePath, setActivePath] = useState(docs[0]?.path)
-  const [activeHeadingId, setActiveHeadingId] = useState(null)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [openSections, setOpenSections] = useState({ notes: true, lists: true, journal: true, briefs: true })
   const [user, setUser] = useState(null)
-  const [authEmail, setAuthEmail] = useState('')
-  const [authPassword, setAuthPassword] = useState('')
-  const [authError, setAuthError] = useState('')
   const [showEditor, setShowEditor] = useState(false)
   const [editorId, setEditorId] = useState(null)
   const [editorTitle, setEditorTitle] = useState('')
@@ -222,19 +49,11 @@ export default function App() {
   const [listTitle, setListTitle] = useState('')
   const [listSaving, setListSaving] = useState(false)
   const [activeListId, setActiveListId] = useState(null)
-  const [newItemText, setNewItemText] = useState('')
-  const [isEditingListTitle, setIsEditingListTitle] = useState(false)
-  const [listTitleDraft, setListTitleDraft] = useState('')
   const [confirmDialog, setConfirmDialog] = useState(null)
-  const notesRef = useRef(null)
-  const listsRef = useRef(null)
-  const journalRef = useRef(null)
-  const briefsRef = useRef(null)
   const searchRef = useRef(null)
 
   useEffect(() => onAuthStateChanged(auth, (nextUser) => {
     setUser(nextUser)
-    if (!nextUser) setAuthError('')
   }), [])
 
   useEffect(() => {
@@ -333,28 +152,6 @@ export default function App() {
     }
   }, [docs, activePath, activeListId])
 
-  const handleSignIn = async () => {
-    setAuthError('')
-    try {
-      await signInWithEmailAndPassword(auth, authEmail.trim(), authPassword)
-    } catch (error) {
-      setAuthError(error.message)
-    }
-  }
-
-  const handleSignUp = async () => {
-    setAuthError('')
-    try {
-      await createUserWithEmailAndPassword(auth, authEmail.trim(), authPassword)
-    } catch (error) {
-      setAuthError(error.message)
-    }
-  }
-
-  const handleSignOut = async () => {
-    await signOut(auth)
-  }
-
   const openEditor = (docItem) => {
     if (!user) return
     if (docItem) {
@@ -450,18 +247,16 @@ export default function App() {
     })
   }
 
-  const handleRenameList = async () => {
+  const handleRenameList = async (nextTitle) => {
     if (!activeListId) return
-    const nextTitle = listTitleDraft.trim() || 'Untitled List'
     await updateDoc(doc(db, 'lists', activeListId), {
       title: nextTitle,
       updatedAt: serverTimestamp(),
     })
-    setIsEditingListTitle(false)
   }
 
-  const handleAddListItem = async () => {
-    if (!activeListId || !newItemText.trim()) return
+  const handleAddListItem = async (text) => {
+    if (!activeListId || !text) return
     const list = firestoreLists.find((item) => item.id === activeListId)
     if (!list) return
     const items = list.items || []
@@ -470,14 +265,13 @@ export default function App() {
     const nextItems = [
       {
         id: createId(),
-        text: newItemText.trim(),
+        text,
         completed: false,
         createdAt: Date.now(),
       },
       ...incomplete,
       ...completed,
     ]
-    setNewItemText('')
     await updateListItems(activeListId, nextItems)
   }
 
@@ -553,12 +347,6 @@ export default function App() {
     }
   }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    })
-  )
-
   const handleDragEnd = async (event) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -599,33 +387,12 @@ export default function App() {
     : filtered.find((doc) => doc.path === activePath) || filtered[0]
   const activeList = firestoreLists.find((list) => list.id === activeListId) || null
 
-  useEffect(() => {
-    if (!activeList) {
-      setIsEditingListTitle(false)
-      setListTitleDraft('')
-      return
-    }
-    setIsEditingListTitle(false)
-    setListTitleDraft(activeList.title || '')
-  }, [activeListId, activeList?.title])
-
   const listStats = useMemo(() => {
     if (!activeList) return null
     const total = activeList.items?.length || 0
     const completed = activeList.items?.filter((item) => item.completed).length || 0
     return { total, completed }
   }, [activeList])
-  const incompleteItems = useMemo(() => {
-    if (!activeList?.items?.length) return []
-    return activeList.items.filter((item) => !item.completed)
-  }, [activeList])
-
-  const completedItems = useMemo(() => {
-    if (!activeList?.items?.length) return []
-    return activeList.items.filter((item) => item.completed)
-  }, [activeList])
-
-  const listItems = useMemo(() => [...incompleteItems, ...completedItems], [incompleteItems, completedItems])
 
   const outline = activeDoc?.outline || []
 
@@ -712,31 +479,6 @@ export default function App() {
   }, [filtered, activePath, activeListId])
 
   useEffect(() => {
-    setActiveHeadingId(outline[0]?.id || null)
-  }, [activeDoc, outline])
-
-  useEffect(() => {
-    if (!activeDoc) return
-    const headings = Array.from(document.querySelectorAll('.doc__content h2[id], .doc__content h3[id]'))
-    if (!headings.length) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveHeadingId(entry.target.id)
-          }
-        })
-      },
-      { root: null, rootMargin: '0px 0px -60% 0px', threshold: 0.1 }
-    )
-
-    headings.forEach((heading) => observer.observe(heading))
-
-    return () => observer.disconnect()
-  }, [activeDoc])
-
-  useEffect(() => {
     const onKey = (event) => {
       if (event.key === '/') {
         event.preventDefault()
@@ -774,25 +516,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [filtered, activePath, showShortcuts, activeListId])
 
-  useEffect(() => {
-    const sections = [
-      { key: 'notes', ref: notesRef },
-      { key: 'lists', ref: listsRef },
-      { key: 'journal', ref: journalRef },
-      { key: 'briefs', ref: briefsRef },
-    ]
-
-    sections.forEach(({ key, ref }) => {
-      const el = ref.current
-      if (!el) return
-      if (openSections[key]) {
-        gsap.to(el, { height: 'auto', opacity: 1, duration: 0.2, ease: 'power1.out' })
-      } else {
-        gsap.to(el, { height: 0, opacity: 0, duration: 0.2, ease: 'power1.in' })
-      }
-    })
-  }, [openSections])
-
   const grouped = useMemo(() => {
     const excludedNoteTitles = new Set(['Brief Archive', 'Docky Docs'])
     const journals = filtered.filter((doc) => doc.isJournal)
@@ -808,669 +531,113 @@ export default function App() {
   return (
     <div className="app">
       {showEditor && (
-        <div className="modal__backdrop" onClick={() => setShowEditor(false)}>
-          <div className="modal modal--editor" onClick={(event) => event.stopPropagation()}>
-            <div className="modal__title">{editorId ? 'Edit Note' : 'New Note'}</div>
-            <label className="modal__label">Title</label>
-            <input
-              className="modal__input"
-              type="text"
-              placeholder="Untitled"
-              value={editorTitle}
-              onChange={(event) => setEditorTitle(event.target.value)}
-            />
-            <label className="modal__label">Tags (comma separated)</label>
-            <input
-              className="modal__input"
-              type="text"
-              placeholder="ideas, docky"
-              value={editorTags}
-              onChange={(event) => setEditorTags(event.target.value)}
-            />
-            <label className="modal__label">Content</label>
-            <textarea
-              className="modal__textarea"
-              rows={12}
-              value={editorContent}
-              onChange={(event) => setEditorContent(event.target.value)}
-              placeholder="Write your note in markdown..."
-            />
-            <div className="modal__actions">
-              {editorId && (
-                <button
-                  className="modal__button modal__button--danger"
-                  onClick={() => openConfirmDialog({
-                    title: 'Delete note?',
-                    body: <>Delete <strong>{editorTitle.trim() || 'Untitled'}</strong>? This cannot be undone.</>,
-                    onConfirm: handleDeleteNote,
-                  })}
-                >
-                  Delete
-                </button>
-              )}
-              <button className="modal__button modal__button--ghost" onClick={() => setShowEditor(false)}>
-                Cancel
-              </button>
-              <button className="modal__button" onClick={handleSaveNote} disabled={editorSaving}>
-                {editorSaving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <EditorModal
+          editorId={editorId}
+          editorTitle={editorTitle}
+          editorContent={editorContent}
+          editorTags={editorTags}
+          editorSaving={editorSaving}
+          onTitleChange={setEditorTitle}
+          onContentChange={setEditorContent}
+          onTagsChange={setEditorTags}
+          onSave={handleSaveNote}
+          onDelete={() => openConfirmDialog({
+            title: 'Delete note?',
+            body: <>Delete <strong>{editorTitle.trim() || 'Untitled'}</strong>? This cannot be undone.</>,
+            onConfirm: handleDeleteNote,
+          })}
+          onClose={() => setShowEditor(false)}
+        />
       )}
 
       {showListModal && (
-        <div className="modal__backdrop" onClick={() => setShowListModal(false)}>
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
-            <div className="modal__title">New List</div>
-            <label className="modal__label">Title</label>
-            <input
-              className="modal__input"
-              type="text"
-              placeholder="Untitled List"
-              value={listTitle}
-              onChange={(event) => setListTitle(event.target.value)}
-            />
-            <div className="modal__actions">
-              <button className="modal__button modal__button--ghost" onClick={() => setShowListModal(false)}>
-                Cancel
-              </button>
-              <button className="modal__button" onClick={handleCreateList} disabled={listSaving}>
-                {listSaving ? 'Creating…' : 'Create'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <NewListModal
+          listTitle={listTitle}
+          onTitleChange={setListTitle}
+          onClose={() => setShowListModal(false)}
+          onCreate={handleCreateList}
+          saving={listSaving}
+        />
       )}
 
-      {confirmDialog && (
-        <div className="modal__backdrop" onClick={closeConfirmDialog}>
-          <div className="modal modal--confirm" onClick={(event) => event.stopPropagation()}>
-            <div className="modal__title">{confirmDialog.title}</div>
-            {confirmDialog.body && (
-              <p className="modal__body">
-                {confirmDialog.body}
-              </p>
-            )}
-            <div className="modal__actions">
-              <button
-                className="modal__button modal__button--ghost"
-                onClick={closeConfirmDialog}
-              >
-                Cancel
-              </button>
-              <button className="modal__button modal__button--danger" onClick={handleConfirmAction}>
-                {confirmDialog.confirmLabel || 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        dialog={confirmDialog}
+        onClose={closeConfirmDialog}
+        onConfirm={handleConfirmAction}
+      />
 
       {showShortcuts && (
-        <div className="modal__backdrop" onClick={() => setShowShortcuts(false)}>
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
-            <div className="modal__title">Keyboard shortcuts</div>
-            <div className="modal__item"><span>/</span> Focus search</div>
-            <div className="modal__item"><span>↑ / ↓</span> Navigate notes</div>
-            <div className="modal__item"><span>Esc</span> Close search / dialog</div>
-            <div className="modal__item"><span>?</span> Toggle this panel</div>
-          </div>
-        </div>
+        <ShortcutsModal onClose={() => setShowShortcuts(false)} />
       )}
 
-      <header className="app-header">
-        <div className="brand">
-          <div className="brand__title">Docky</div>
-          <div className="brand__subtitle">The Dock · dFree × Rocky</div>
-        </div>
+      <AppHeader
+        user={user}
+        onNewNote={() => openEditor()}
+        onNewList={() => setShowListModal(true)}
+      />
 
-        <div className="app-header__actions">
-          {user && (
-            <>
-              <button className="icon-button icon-button--primary" onClick={() => openEditor()} type="button">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 1 1 0-2h5V6a1 1 0 0 1 1-1Z" />
-                </svg>
-                <span>New</span>
-              </button>
-              <button className="icon-button" onClick={() => setShowListModal(true)} type="button">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 6.5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm5.5-.5a1 1 0 1 1 0 2H20a1 1 0 1 1 0-2H9.5Zm-5.5 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm5.5-.5a1 1 0 1 1 0 2H20a1 1 0 1 1 0-2H9.5Zm-5.5 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm5.5-.5a1 1 0 1 1 0 2H20a1 1 0 1 1 0-2H9.5Z" />
-                </svg>
-                <span>New List</span>
-              </button>
-            </>
-          )}
-          <div className="auth">
-            {user ? (
-              <div className="auth__signed-in">
-                <div className="auth__label">Signed in as</div>
-                <div className="auth__value">{user.email}</div>
-                <button className="auth__button auth__button--ghost" onClick={handleSignOut}>
-                  Sign out
-                </button>
-              </div>
-            ) : (
-              <>
-                <input
-                  className="auth__input"
-                  type="email"
-                  placeholder="Email"
-                  value={authEmail}
-                  onChange={(event) => setAuthEmail(event.target.value)}
-                />
-                <input
-                  className="auth__input"
-                  type="password"
-                  placeholder="Password"
-                  value={authPassword}
-                  onChange={(event) => setAuthPassword(event.target.value)}
-                />
-                <div className="auth__actions">
-                  <button className="auth__button" onClick={handleSignIn}>Sign in</button>
-                  <button className="auth__button auth__button--ghost" onClick={handleSignUp}>Sign up</button>
-                </div>
-                {authError && <div className="auth__error">{authError}</div>}
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <Sidebar
+        ref={searchRef}
+        query={query}
+        onQueryChange={setQuery}
+        filteredCount={filteredCount}
+        totalCount={totalCount}
+        grouped={grouped}
+        filteredLists={filteredLists}
+        openSections={openSections}
+        onToggleSection={(key) => setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))}
+        activeDoc={activeDoc}
+        activeListId={activeListId}
+        onSelectDoc={(path) => {
+          setActivePath(path)
+          setActiveListId(null)
+        }}
+        onSelectList={(id) => {
+          setActiveListId(id)
+          setActivePath(null)
+        }}
+      />
 
-      <aside className="sidebar">
-        <div className="sidebar__search search">
-          <input
-            ref={searchRef}
-            className="search__input"
-            type="search"
-            placeholder="Search docs..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <div className="search__hint">
-            Press / to search · Showing {filteredCount} of {totalCount} · Press ? for help
-          </div>
-        </div>
-        <div className="doc-list">
-          {grouped.notes.length > 0 && (
-            <div className="doc-list__section">
-              <button
-                className="doc-list__heading doc-list__heading--toggle"
-                onClick={() =>
-                  setOpenSections((prev) => ({ ...prev, notes: !prev.notes }))
-                }
-                aria-expanded={openSections.notes}
-              >
-                <span>Notes</span>
-                <span className={`doc-list__chevron ${openSections.notes ? 'is-open' : ''}`}>
-                  ▾
-                </span>
-              </button>
-              <div className="doc-list__content" ref={notesRef}>
-                {grouped.notes.map((doc) => (
-                  <button
-                    key={doc.path}
-                    className={`doc-list__item ${doc.path === activeDoc?.path ? 'is-active' : ''}`}
-                    onClick={() => {
-                      setActivePath(doc.path)
-                      setActiveListId(null)
-                    }}
-                  >
-                    <div className="doc-list__title">
-                      {highlightText(doc.title, query)}
-                    </div>
-                    <div className="doc-list__meta">
-                      {highlightText(doc.updated || doc.created || doc.slug, query)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+      <Viewer
+        activeList={activeList}
+        activeDoc={activeDoc}
+        listStats={listStats}
+        briefGreeting={briefGreeting}
+        user={user}
+        onEditDoc={openEditor}
+        onDeleteBrief={(docItem) => openConfirmDialog({
+          title: 'Delete brief?',
+          body: <>Delete <strong>{docItem.title}</strong>? This cannot be undone.</>,
+          confirmLabel: 'Delete Brief',
+          onConfirm: () => handleDeleteBrief(docItem),
+        })}
+        onAddListItem={handleAddListItem}
+        onToggleListItem={handleToggleListItem}
+        onDeleteListItem={handleDeleteListItem}
+        onDeleteList={() => openConfirmDialog({
+          title: 'Delete list?',
+          body: <>Delete <strong>{activeList?.title}</strong>? This cannot be undone.</>,
+          onConfirm: handleDeleteList,
+        })}
+        onRenameList={handleRenameList}
+        onDragEnd={handleDragEnd}
+      />
 
-          {filteredLists.length > 0 && (
-            <div className="doc-list__section">
-              <button
-                className="doc-list__heading doc-list__heading--toggle"
-                onClick={() =>
-                  setOpenSections((prev) => ({ ...prev, lists: !prev.lists }))
-                }
-                aria-expanded={openSections.lists}
-              >
-                <span>Lists</span>
-                <span className={`doc-list__chevron ${openSections.lists ? 'is-open' : ''}`}>
-                  ▾
-                </span>
-              </button>
-              <div className="doc-list__content" ref={listsRef}>
-                {filteredLists.map((list) => {
-                  const completed = list.items?.filter((item) => item.completed).length || 0
-                  const total = list.items?.length || 0
-                  return (
-                    <button
-                      key={list.id}
-                      className={`doc-list__item ${list.id === activeListId ? 'is-active' : ''}`}
-                      onClick={() => {
-                        setActiveListId(list.id)
-                        setActivePath(null)
-                      }}
-                    >
-                      <div className="doc-list__title">
-                        {highlightText(list.title, query)}
-                      </div>
-                      <div className="doc-list__meta">
-                        {completed}/{total} done
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {grouped.journals.length > 0 && (
-            <div className="doc-list__section">
-              <button
-                className="doc-list__heading doc-list__heading--toggle"
-                onClick={() =>
-                  setOpenSections((prev) => ({ ...prev, journal: !prev.journal }))
-                }
-                aria-expanded={openSections.journal}
-              >
-                <span>Journals</span>
-                <span className={`doc-list__chevron ${openSections.journal ? 'is-open' : ''}`}>
-                  ▾
-                </span>
-              </button>
-              <div className="doc-list__content" ref={journalRef}>
-                {grouped.journals.map((doc) => (
-                  <button
-                    key={doc.path}
-                    className={`doc-list__item ${doc.path === activeDoc?.path ? 'is-active' : ''}`}
-                    onClick={() => {
-                      setActivePath(doc.path)
-                      setActiveListId(null)
-                    }}
-                  >
-                    <div className="doc-list__title">
-                      {highlightText(doc.title, query)}
-                    </div>
-                    <div className="doc-list__meta">
-                      {highlightText(doc.updated || doc.created || doc.slug, query)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {grouped.briefs.length > 0 && (
-            <div className="doc-list__section">
-              <button
-                className="doc-list__heading doc-list__heading--toggle"
-                onClick={() =>
-                  setOpenSections((prev) => ({ ...prev, briefs: !prev.briefs }))
-                }
-                aria-expanded={openSections.briefs}
-              >
-                <span>Morning Briefs</span>
-                <span className={`doc-list__chevron ${openSections.briefs ? 'is-open' : ''}`}>
-                  ▾
-                </span>
-              </button>
-              <div className="doc-list__content" ref={briefsRef}>
-                {grouped.briefs.map((doc) => (
-                  <button
-                    key={doc.path}
-                    className={`doc-list__item ${doc.path === activeDoc?.path ? 'is-active' : ''}`}
-                    onClick={() => {
-                      setActivePath(doc.path)
-                      setActiveListId(null)
-                    }}
-                  >
-                    <div className="doc-list__title">
-                      {highlightText(doc.title, query)}
-                    </div>
-                    <div className="doc-list__meta">
-                      {highlightText(doc.updated || doc.created || doc.slug, query)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {filteredCount === 0 && (
-            <div className="doc-list__empty">
-              No docs match that search. Try clearing the filter or use fewer words.
-            </div>
-          )}
-        </div>
-      </aside>
-
-      <main className="viewer">
-        {activeList ? (
-          <article className="list">
-            <header className="list__header">
-              <div className="list__title">
-                {isEditingListTitle ? (
-                  <div className="list__title-edit">
-                    <input
-                      className="list__title-input"
-                      type="text"
-                      value={listTitleDraft}
-                      onChange={(event) => setListTitleDraft(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
-                          event.preventDefault()
-                          handleRenameList()
-                        }
-                        if (event.key === 'Escape') {
-                          event.preventDefault()
-                          setIsEditingListTitle(false)
-                          setListTitleDraft(activeList.title || '')
-                        }
-                      }}
-                    />
-                    <button
-                      className="list__rename-save"
-                      type="button"
-                      onClick={handleRenameList}
-                    >
-                      Save
-                    </button>
-                    <button
-                      className="list__rename-cancel"
-                      type="button"
-                      onClick={() => {
-                        setIsEditingListTitle(false)
-                        setListTitleDraft(activeList.title || '')
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <div className="list__title-display">
-                    <h1>{activeList.title}</h1>
-                    <button
-                      className="list__rename"
-                      type="button"
-                      onClick={() => {
-                        setIsEditingListTitle(true)
-                        setListTitleDraft(activeList.title || '')
-                      }}
-                    >
-                      Rename
-                    </button>
-                  </div>
-                )}
-                <div className="list__meta">
-                  {listStats?.completed ?? 0} of {listStats?.total ?? 0} done
-                </div>
-              </div>
-              <button
-                className="list__delete"
-                type="button"
-                onClick={() => openConfirmDialog({
-                  title: 'Delete list?',
-                  body: <>Delete <strong>{activeList.title}</strong>? This cannot be undone.</>,
-                  onConfirm: handleDeleteList,
-                })}
-              >
-                Delete list
-              </button>
-            </header>
-            <div className="list__composer">
-              <input
-                className="list__input"
-                type="text"
-                placeholder="Add a new item..."
-                value={newItemText}
-                onChange={(event) => setNewItemText(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault()
-                    handleAddListItem()
-                  }
-                }}
-              />
-              <button
-                className="list__add-button"
-                type="button"
-                onClick={handleAddListItem}
-                disabled={!newItemText.trim()}
-              >
-                Add
-              </button>
-            </div>
-            <ul className="list__items">
-              {listItems.length > 0 && (
-                <>
-                  <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    <SortableContext
-                      items={incompleteItems.map((item) => item.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {incompleteItems.map((item) => (
-                        <SortableListItem
-                          key={item.id}
-                          item={item}
-                          onToggle={() => handleToggleListItem(activeList.id, item.id)}
-                          onDelete={() => handleDeleteListItem(activeList.id, item.id)}
-                        />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
-                  {completedItems.map((item) => (
-                    <li
-                      key={item.id}
-                      data-item-id={item.id}
-                      className="list-item is-complete"
-                    >
-                      <span className="list-item__swipe" aria-hidden="true" />
-                      <button
-                        className="list-item__checkbox"
-                        type="button"
-                        onClick={() => handleToggleListItem(activeList.id, item.id)}
-                        aria-pressed={item.completed}
-                      >
-                        <span className="list-item__check" />
-                      </button>
-                      <span className="list-item__text">{item.text}</span>
-                      <button
-                        className="list-item__delete"
-                        type="button"
-                        onClick={() => handleDeleteListItem(activeList.id, item.id)}
-                        aria-label="Delete item"
-                      >
-                        ×
-                      </button>
-                    </li>
-                  ))}
-                </>
-              )
-              }
-              {!listItems.length && (
-                <li className="list-item list-item--empty">
-                  No items yet. Add the first task above.
-                </li>
-              )}
-            </ul>
-          </article>
-        ) : activeDoc ? (
-          <article className="doc">
-            <header className="doc__header">
-              <div className="doc__title">
-                <h1>{briefGreeting || activeDoc.title}</h1>
-                {activeDoc.isBrief && (
-                  <div className="doc__date">{activeDoc.title}</div>
-                )}
-                {!activeDoc.isBrief && activeDoc.created && (
-                  <div className="doc__date">{activeDoc.created}</div>
-                )}
-                {activeDoc.tags.length > 0 && (
-                  <div className="doc__tags">
-                    {activeDoc.tags.map((tag) => (
-                      <span key={tag} className="tag">{tag}</span>
-                    ))}
-                  </div>
-                )}
-                {user && !activeDoc.isBrief && (
-                  <div className="doc__actions">
-                    <button className="doc__button" onClick={() => openEditor(activeDoc)}>
-                      Edit Note
-                    </button>
-                  </div>
-                )}
-              </div>
-              {user && activeDoc.isBrief && (
-                <button
-                  className="list__delete"
-                  type="button"
-                  onClick={() => openConfirmDialog({
-                    title: 'Delete brief?',
-                    body: <>Delete <strong>{activeDoc.title}</strong>? This cannot be undone.</>,
-                    confirmLabel: 'Delete Brief',
-                    onConfirm: () => handleDeleteBrief(activeDoc),
-                  })}
-                >
-                  Delete Brief
-                </button>
-              )}
-            </header>
-            <div
-              className="doc__content"
-              dangerouslySetInnerHTML={{ __html: activeDoc.html }}
-            />
-          </article>
-        ) : (
-          <div className="empty">
-            Select a note from the left to get started.
-          </div>
-        )}
-      </main>
-
-      <aside className="rightbar">
-        <div className="rightbar__content">
-          {activeList ? (
-            <div className="rightbar__section">
-              <div className="rightbar__title">List Stats</div>
-              <div className="rightbar__item">
-                Items: {listStats?.total ?? 0}
-              </div>
-              <div className="rightbar__item">
-                Completed: {listStats?.completed ?? 0}
-              </div>
-              <div className="rightbar__item">
-                Last updated: {activeList.updated || activeList.created || '—'}
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="rightbar__section">
-                <div className="rightbar__title">Outline</div>
-                {outline.length ? (
-                  outline.map((item, index) => (
-                    <button
-                      key={`${item.text}-${index}`}
-                      className={`rightbar__outline rightbar__item--indent-${item.level} ${
-                        activeHeadingId === item.id ? 'is-active' : ''
-                      }`}
-                      onClick={() => {
-                        const el = document.getElementById(item.id)
-                        if (el) {
-                          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                        }
-                      }}
-                    >
-                      {item.text}
-                    </button>
-                  ))
-                ) : (
-                  <div className="rightbar__item">No headings found.</div>
-                )}
-              </div>
-              <div className="rightbar__section">
-                <div className="rightbar__title">Metadata</div>
-                <div className="rightbar__item">Words: {docStats.words}</div>
-                <div className="rightbar__item">Reading time: {docStats.minutes} min</div>
-                <div className="rightbar__item">
-                  Last updated: {activeDoc?.updated || activeDoc?.created || '—'}
-                </div>
-              </div>
-
-              {briefCompare && (
-                <div className="rightbar__section">
-                  <div className="rightbar__title">Yesterday vs Today</div>
-                  <div className="rightbar__item">
-                    Today: {briefCompare.today.created}
-                  </div>
-                  <div className="rightbar__item">
-                    Yesterday: {briefCompare.yesterday.created}
-                  </div>
-                  {['S&P 500', 'Nasdaq', 'Dow', 'BTC', 'ETH'].map((key) => (
-                    <div key={key} className="rightbar__snippet">
-                      <strong>{key}:</strong>{' '}
-                      {briefCompare.yesterdayMarkets[key] || '—'} →{' '}
-                      {briefCompare.todayMarkets[key] || '—'}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="rightbar__section">
-                <div className="rightbar__title">Related</div>
-                {relatedDocs.length ? (
-                  relatedDocs.map(({ doc, overlap }) => (
-                    <div key={doc.path} className="rightbar__backlink">
-                      <button
-                        className="rightbar__link"
-                        onClick={() => {
-                          setActivePath(doc.path)
-                          setActiveListId(null)
-                        }}
-                      >
-                        {doc.title}
-                      </button>
-                      <div className="rightbar__snippet">
-                        Tags: {overlap.join(', ')}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="rightbar__item">No related docs.</div>
-                )}
-              </div>
-
-              <div className="rightbar__section">
-                <div className="rightbar__title">Backlinks</div>
-                {backlinks.length ? (
-                  backlinks.map((doc) => (
-                    <div key={doc.path} className="rightbar__backlink">
-                      <button
-                        className="rightbar__link"
-                        onClick={() => {
-                          setActivePath(doc.path)
-                          setActiveListId(null)
-                        }}
-                      >
-                        {doc.title}
-                      </button>
-                      <div className="rightbar__snippet">
-                        {snippetMap.get(doc.path)}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="rightbar__item">No backlinks found.</div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </aside>
+      <Rightbar
+        activeList={activeList}
+        activeDoc={activeDoc}
+        listStats={listStats}
+        outline={outline}
+        docStats={docStats}
+        briefCompare={briefCompare}
+        relatedDocs={relatedDocs}
+        backlinks={backlinks}
+        snippetMap={snippetMap}
+        onNavigate={(path) => {
+          setActivePath(path)
+          setActiveListId(null)
+        }}
+      />
     </div>
   )
 }

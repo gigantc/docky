@@ -1,0 +1,74 @@
+@use '../../styles/variables' as v;
+
+.auth {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid v.$border;
+  border-radius: v.$radius-m;
+  background: v.$surface-2;
+  flex-wrap: wrap;
+}
+
+.auth__signed-in {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.auth__label {
+  font-size: v.$fs-sm;
+  color: v.$muted;
+}
+
+.auth__value {
+  font-size: v.$fs-base;
+  color: v.$text;
+  word-break: break-all;
+}
+
+.auth__input {
+  width: 160px;
+  padding: 8px 10px;
+  border-radius: v.$radius-m;
+  border: 1px solid transparent;
+  background: v.$surface-3;
+  color: v.$text;
+  outline: none;
+  box-shadow: inset 0 0 0 1px v.$border;
+
+  &:focus {
+    box-shadow: v.$ring;
+  }
+}
+
+.auth__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.auth__button {
+  padding: 6px 10px;
+  border-radius: v.$radius-pill;
+  border: none;
+  cursor: pointer;
+  background: v.$accent;
+  color: v.$on-accent;
+  font-size: v.$fs-sm;
+  font-weight: v.$fw-bold;
+}
+
+.auth__button--ghost {
+  background: transparent;
+  border: 1px solid v.$border;
+  color: v.$text;
+}
+
+.auth__error {
+  font-size: v.$fs-xs;
+  color: v.$danger;
+  word-break: break-word;
+}
