@@ -517,7 +517,7 @@ export default function App() {
   }, [filtered, activePath, showShortcuts, activeListId])
 
   const grouped = useMemo(() => {
-    const excludedNoteTitles = new Set(['Brief Archive', 'Docky Docs'])
+    const excludedNoteTitles = new Set(['Brief Archive', 'The Dock Docs'])
     const journals = filtered.filter((doc) => doc.isJournal)
     const briefs = filtered.filter((doc) => doc.isBrief)
     const notes = filtered.filter((doc) => !doc.isJournal && !doc.isBrief)

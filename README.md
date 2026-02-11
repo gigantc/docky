@@ -1,4 +1,4 @@
-# Docky
+# The Dock
 
 A personal note, journal, and checklist app built with React and Firebase. Dark-themed UI following Material Design 3 principles.
 

@@ -25,7 +25,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const repoRoot = path.resolve(__dirname, '..')
 
-const usage = `Docky Firestore CLI
+const usage = `The Dock Firestore CLI
 
 Usage:
   node scripts/docky-cli.js create <note|journal|brief|list> [options]

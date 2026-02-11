@@ -1,10 +1,10 @@
-# Docky Firestore CRUD (Direct)
+# The Dock Firestore CRUD (Direct)
 
-Docky uses Firestore collections directly (no Cloud Functions).
+The Dock uses Firestore collections directly (no Cloud Functions).
 This doc explains how the assistant can create/update/delete/list Notes, Lists, Journals, and Briefs via the CLI helper.
 
 ## Data model (current app)
-Collections used by Docky today:
+Collections used by The Dock today:
 - `notes` → `type: note | journal | brief`
 - `lists` → list documents with `items[]`
 

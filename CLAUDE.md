@@ -23,7 +23,7 @@ npm run docky:cli -- <command> <type> [options]
 
 ## Architecture
 
-**Docky** is a personal note/journal/checklist app. React 19 + Vite + Sass frontend, Firebase Auth + Firestore backend, deployed to Netlify.
+**The Dock** is a personal note/journal/checklist app. React 19 + Vite + Sass frontend, Firebase Auth + Firestore backend, deployed to Netlify.
 
 ### Data sources
 
