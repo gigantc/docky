@@ -57,7 +57,8 @@
 .icon-button svg {
   width: 16px;
   height: 16px;
-  fill: currentColor;
+  fill: none;
+  stroke: currentColor;
 }
 
 .icon-button:focus,
