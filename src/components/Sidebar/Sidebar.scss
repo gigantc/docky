@@ -12,6 +12,7 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .sidebar__top {
@@ -72,6 +73,8 @@
 
 .sidebar__content {
   min-height: 0;
+  width: var(--sidebar-panel-width);
+  max-width: var(--sidebar-panel-width);
   overflow-y: auto;
   display: flex;
   flex-direction: column;

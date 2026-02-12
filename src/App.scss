@@ -67,6 +67,7 @@
 
 .app {
   --sidebar-width: 320px;
+  --sidebar-panel-width: 320px;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr 280px;
   grid-template-rows: auto 1fr;
@@ -94,6 +95,7 @@
 @media (max-width: 900px) {
   .app {
     --sidebar-width: 56px;
+    --sidebar-panel-width: 280px;
     grid-template-columns: var(--sidebar-width) 1fr;
     grid-template-areas:
       'header header'
