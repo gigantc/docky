@@ -43,7 +43,10 @@
 
 // M3 outlined button
 .doc__button {
-  padding: 10px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
   border-radius: v.$radius-pill;
   border: 1px solid rgba(v.$white, 0.12);
   background: transparent;
@@ -61,10 +64,13 @@
 
 // M3 danger outlined button
 .doc__brief-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid rgba(v.$danger, 0.45);
   background: transparent;
   color: v.$danger;
-  padding: 10px 16px;
+  padding: 10px 12px;
   border-radius: v.$radius-pill;
   font-size: v.$fs-sm;
   cursor: pointer;

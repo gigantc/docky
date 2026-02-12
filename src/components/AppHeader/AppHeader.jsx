@@ -1,3 +1,4 @@
+import { CirclePlus, ListTodo } from 'lucide-react'
 import Auth from '../Auth/Auth'
 import './AppHeader.scss'
 
@@ -13,15 +14,11 @@ export default function AppHeader({ user, onNewNote, onNewList, theme, onThemeCh
         {user && (
           <>
             <button className="icon-button icon-button--primary" onClick={onNewNote} type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 1 1 0-2h5V6a1 1 0 0 1 1-1Z" />
-              </svg>
+              <CirclePlus aria-hidden="true" strokeWidth={2} size={16} />
               <span>New</span>
             </button>
             <button className="icon-button" onClick={onNewList} type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 6.5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm5.5-.5a1 1 0 1 1 0 2H20a1 1 0 1 1 0-2H9.5Zm-5.5 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm5.5-.5a1 1 0 1 1 0 2H20a1 1 0 1 1 0-2H9.5Zm-5.5 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm5.5-.5a1 1 0 1 1 0 2H20a1 1 0 1 1 0-2H9.5Z" />
-              </svg>
+              <ListTodo aria-hidden="true" strokeWidth={2} size={16} />
               <span>New List</span>
             </button>
           </>
