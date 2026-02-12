@@ -55,6 +55,7 @@ export default function App() {
   const [confirmDialog, setConfirmDialog] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('dock.theme') || 'green')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const appRef = useRef(null)
   const searchRef = useRef(null)
 
   useEffect(() => onAuthStateChanged(auth, (nextUser) => {
@@ -537,14 +538,26 @@ export default function App() {
 
   const totalCount = docs.length + firestoreLists.length
   const filteredCount = filtered.length + filteredLists.length
-  const isMobileViewport = () => window.innerWidth <= 900
+
+  useEffect(() => {
+    if (!appRef.current) return
+    const targetWidth = sidebarOpen
+      ? (window.innerWidth <= 900 ? 280 : 320)
+      : 56
+
+    gsap.to(appRef.current, {
+      '--sidebar-width': `${targetWidth}px`,
+      duration: 0.32,
+      ease: 'power2.out',
+    })
+  }, [sidebarOpen])
 
   if (!user) {
     return <LoginPage />
   }
 
   return (
-    <div className={`app ${sidebarOpen ? 'is-sidebar-open' : 'is-sidebar-collapsed'}`}>
+    <div className="app" ref={appRef}>
       {showEditor && (
         <EditorModal
           editorId={editorId}
@@ -592,18 +605,7 @@ export default function App() {
         theme={theme}
         onThemeChange={setTheme}
         version={APP_VERSION}
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
       />
-
-      {sidebarOpen && isMobileViewport() && (
-        <button
-          className="app__sidebar-scrim"
-          type="button"
-          aria-label="Close sidebar"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
 
       <Sidebar
         ref={searchRef}
@@ -617,15 +619,15 @@ export default function App() {
         onToggleSection={(key) => setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))}
         activeDoc={activeDoc}
         activeListId={activeListId}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
         onSelectDoc={(path) => {
           setActivePath(path)
           setActiveListId(null)
-          if (isMobileViewport()) setSidebarOpen(false)
         }}
         onSelectList={(id) => {
           setActiveListId(id)
           setActivePath(null)
-          if (isMobileViewport()) setSidebarOpen(false)
         }}
       />
 
