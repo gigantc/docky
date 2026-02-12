@@ -1,7 +1,7 @@
 import Auth from '../Auth/Auth'
 import './AppHeader.scss'
 
-export default function AppHeader({ user, onNewNote, onNewList, theme, onThemeChange }) {
+export default function AppHeader({ user, onNewNote, onNewList, theme, onThemeChange, version }) {
   return (
     <header className="app-header">
       <div className="brand">
@@ -26,7 +26,7 @@ export default function AppHeader({ user, onNewNote, onNewList, theme, onThemeCh
             </button>
           </>
         )}
-        <Auth user={user} theme={theme} onThemeChange={onThemeChange} />
+        <Auth user={user} theme={theme} onThemeChange={onThemeChange} version={version} />
       </div>
     </header>
   )

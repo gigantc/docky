@@ -31,6 +31,8 @@ import Sidebar from './components/Sidebar/Sidebar'
 import Viewer from './components/Viewer/Viewer'
 import LoginPage from './components/LoginPage/LoginPage'
 
+const APP_VERSION = '0.1.0'
+
 export default function App() {
   const [firestoreDocs, setFirestoreDocs] = useState([])
   const [firestoreLists, setFirestoreLists] = useState([])
@@ -587,6 +589,7 @@ export default function App() {
         onNewList={() => setShowListModal(true)}
         theme={theme}
         onThemeChange={setTheme}
+        version={APP_VERSION}
       />
 
       <Sidebar

@@ -94,3 +94,12 @@
   cursor: pointer;
   @include m.state-layer;
 }
+
+.auth-menu__version {
+  margin-top: 6px;
+  padding: 6px 10px 2px;
+  border-top: 1px solid rgba(v.$white, 0.08);
+  color: v.$muted;
+  font-size: v.$fs-xs;
+  text-align: right;
+}
