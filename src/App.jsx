@@ -29,6 +29,7 @@ import AppHeader from './components/AppHeader/AppHeader'
 import Rightbar from './components/Rightbar/Rightbar'
 import Sidebar from './components/Sidebar/Sidebar'
 import Viewer from './components/Viewer/Viewer'
+import LoginPage from './components/LoginPage/LoginPage'
 
 export default function App() {
   const [firestoreDocs, setFirestoreDocs] = useState([])
@@ -527,6 +528,10 @@ export default function App() {
 
   const totalCount = docs.length + firestoreLists.length
   const filteredCount = filtered.length + filteredLists.length
+
+  if (!user) {
+    return <LoginPage />
+  }
 
   return (
     <div className="app">

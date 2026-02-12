@@ -1,69 +1,55 @@
 @use '../../styles/variables' as v;
 @use '../../styles/mixins' as m;
 
-.auth {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border: 1px solid rgba(v.$white, 0.06);
-  border-radius: v.$radius-m;
-  @include m.surface-tint(2);
-  flex-wrap: wrap;
+.auth-menu {
+  position: relative;
 }
 
-.auth__signed-in {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.auth__label {
-  font-size: v.$fs-sm;
-  color: v.$muted;
-}
-
-.auth__value {
-  font-size: v.$fs-base;
-  color: v.$white;
-  word-break: break-all;
-}
-
-.auth__input {
-  width: 160px;
-  @include m.input-field;
-}
-
-.auth__actions {
-  display: flex;
-  gap: 6px;
-}
-
-// M3 filled button (Sign In)
-.auth__button {
-  padding: 10px 24px;
-  border-radius: v.$radius-pill;
-  border: none;
-  cursor: pointer;
-  background: v.$green;
+.auth-menu__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(v.$white, 0.14);
+  background: rgba(v.$white, 0.08);
   color: v.$white;
   font-size: v.$fs-sm;
   font-weight: v.$fw-bold;
+  cursor: pointer;
   @include m.state-layer;
+  @include m.focus-ring;
 }
 
-// M3 text button (Sign Out)
-.auth__button--ghost {
-  background: transparent;
-  border: none;
-  color: v.$green-light;
-  padding: 10px 12px;
+.auth-menu__dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 220px;
+  border-radius: v.$radius-m;
+  border: 1px solid rgba(v.$white, 0.08);
+  @include m.surface-tint(3);
+  box-shadow: v.$elevation-2;
+  padding: 8px;
+  z-index: 12;
 }
 
-.auth__error {
+.auth-menu__email {
+  color: v.$muted;
   font-size: v.$fs-xs;
-  color: v.$danger;
-  word-break: break-word;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(v.$white, 0.08);
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+
+.auth-menu__item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: v.$white;
+  border-radius: v.$radius-s;
+  padding: 10px;
+  font-size: v.$fs-sm;
+  cursor: pointer;
+  @include m.state-layer;
 }
