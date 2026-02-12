@@ -93,6 +93,7 @@
 
 @media (max-width: 900px) {
   .app {
+    --sidebar-width: 56px;
     grid-template-columns: var(--sidebar-width) 1fr;
     grid-template-areas:
       'header header'

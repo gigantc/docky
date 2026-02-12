@@ -54,6 +54,10 @@ export default function App() {
   const [activeListId, setActiveListId] = useState(null)
   const [confirmDialog, setConfirmDialog] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('dock.theme') || 'green')
+  const [isMobileViewport, setIsMobileViewport] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth <= 900
+  })
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === 'undefined') return true
     return window.innerWidth > 900
@@ -74,6 +78,7 @@ export default function App() {
   useEffect(() => {
     const syncSidebarForViewport = () => {
       const isMobile = window.innerWidth <= 900
+      setIsMobileViewport(isMobile)
       if (isMobile !== isMobileRef.current) {
         isMobileRef.current = isMobile
         setSidebarOpen(!isMobile)
@@ -561,7 +566,7 @@ export default function App() {
   useEffect(() => {
     if (!appRef.current) return
     const targetWidth = sidebarOpen
-      ? (window.innerWidth <= 900 ? 280 : 320)
+      ? (isMobileViewport ? 280 : 320)
       : 56
 
     gsap.to(appRef.current, {
@@ -569,14 +574,16 @@ export default function App() {
       duration: 0.32,
       ease: 'power2.out',
     })
-  }, [sidebarOpen])
+  }, [sidebarOpen, isMobileViewport])
 
   if (!user) {
     return <LoginPage />
   }
 
+  const sidebarWidth = sidebarOpen ? (isMobileViewport ? 280 : 320) : 56
+
   return (
-    <div className="app" ref={appRef}>
+    <div className="app" ref={appRef} style={{ '--sidebar-width': `${sidebarWidth}px` }}>
       {showEditor && (
         <EditorModal
           editorId={editorId}
