@@ -650,10 +650,12 @@ export default function App() {
         onSelectDoc={(path) => {
           setActivePath(path)
           setActiveListId(null)
+          if (isMobileViewport) setSidebarOpen(false)
         }}
         onSelectList={(id) => {
           setActiveListId(id)
           setActivePath(null)
+          if (isMobileViewport) setSidebarOpen(false)
         }}
       />
 
