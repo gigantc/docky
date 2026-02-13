@@ -10,6 +10,7 @@ export default function DocumentView({
   user,
   onSave,
   onDiscardNew,
+  onRequestDiscardNew,
   onDelete,
   autoStartEdit = false,
 }) {
@@ -65,9 +66,7 @@ export default function DocumentView({
 
   const cancelEdit = async () => {
     if (isDraftDoc) {
-      const discard = window.confirm('Discard this new entry?')
-      if (!discard) return
-      await onDiscardNew?.(activeDoc)
+      onRequestDiscardNew?.(activeDoc)
       return
     }
 

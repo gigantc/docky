@@ -390,6 +390,16 @@ export default function App() {
     setActiveListId(null)
   }
 
+
+  const requestDiscardNewDoc = (docItem) => {
+    openConfirmDialog({
+      title: 'Discard new entry?',
+      body: <>Discard <strong>{docItem?.title || 'Untitled'}</strong>? Unsaved changes will be lost.</>,
+      confirmLabel: 'Discard',
+      onConfirm: () => handleDiscardNewDocInline(docItem),
+    })
+  }
+
   const handleDeleteList = async () => {
     if (!activeListId || !activeList) return
     await deleteDoc(doc(db, 'lists', activeListId))
@@ -641,6 +651,7 @@ export default function App() {
         autoEditDocId={autoEditDocId}
         onSaveDoc={handleUpdateNoteInline}
         onDiscardNewDoc={handleDiscardNewDocInline}
+        onRequestDiscardNewDoc={requestDiscardNewDoc}
         onDeleteDoc={(docItem) => openConfirmDialog({
           title: docItem?.isBrief ? 'Delete brief?' : 'Delete note?',
           body: <>Delete <strong>{docItem?.title || 'Untitled'}</strong>? This cannot be undone.</>,
