@@ -8,6 +8,7 @@ export default function Viewer({
   listStats,
   briefGreeting,
   user,
+  autoEditDocId,
   onSaveDoc,
   onDeleteDoc,
   onAddListItem,
@@ -45,6 +46,7 @@ export default function Viewer({
           user={user}
           onSave={onSaveDoc}
           onDelete={onDeleteDoc}
+          autoStartEdit={autoEditDocId === activeDoc?.id}
         />
       </main>
     )

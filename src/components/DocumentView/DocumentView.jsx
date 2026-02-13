@@ -10,6 +10,7 @@ export default function DocumentView({
   user,
   onSave,
   onDelete,
+  autoStartEdit = false,
 }) {
   const editable = user && !activeDoc.isBrief
   const [isEditing, setIsEditing] = useState(false)
@@ -29,7 +30,7 @@ export default function DocumentView({
   })
 
   useEffect(() => {
-    setIsEditing(false)
+    setIsEditing(Boolean(autoStartEdit && editable))
     setTitleDraft(activeDoc.title || '')
     setTagsDraft((activeDoc.rawTags || activeDoc.tags || []).join(', '))
 
@@ -37,7 +38,7 @@ export default function DocumentView({
       editor.setEditable(false)
       editor.commands.setContent(activeDoc.contentJson || markdownToInitialHtml(activeDoc.content || ''), false)
     }
-  }, [activeDoc.id, activeDoc.title, activeDoc.content, activeDoc.contentJson, activeDoc.rawTags, activeDoc.tags, editor])
+  }, [activeDoc.id, activeDoc.title, activeDoc.content, activeDoc.contentJson, activeDoc.rawTags, activeDoc.tags, editor, autoStartEdit, editable])
 
   useEffect(() => {
     if (!editor) return
@@ -57,11 +58,11 @@ export default function DocumentView({
       contentJson: editor.getJSON(),
       content: editor.getText(),
     })
-    setIsEditing(false)
+    setIsEditing(Boolean(autoStartEdit && editable))
   }
 
   const cancelEdit = () => {
-    setIsEditing(false)
+    setIsEditing(Boolean(autoStartEdit && editable))
     setTitleDraft(activeDoc.title || '')
     setTagsDraft((activeDoc.rawTags || activeDoc.tags || []).join(', '))
     if (editor) editor.commands.setContent(activeDoc.contentJson || markdownToInitialHtml(activeDoc.content || ''), false)

@@ -54,6 +54,7 @@ export default function App() {
     if (typeof window === 'undefined') return true
     return window.innerWidth > 900
   })
+  const [autoEditDocId, setAutoEditDocId] = useState(null)
   const appRef = useRef(null)
   const searchRef = useRef(null)
   const isMobileRef = useRef(typeof window !== 'undefined' ? window.innerWidth <= 900 : false)
@@ -200,6 +201,7 @@ export default function App() {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
+    setAutoEditDocId(docRef.id)
     setActivePath(`firestore:note/${docRef.id}`)
     setActiveListId(null)
     if (isMobileViewport) setSidebarOpen(false)
@@ -221,6 +223,31 @@ export default function App() {
     await deleteDoc(doc(db, 'notes', docItem.id))
     setActivePath(null)
     setActiveListId(null)
+  }
+
+
+  const handleCreateJournal = async () => {
+    if (!user) return
+    const today = new Date().toISOString().slice(0, 10)
+    const title = `Daily Journal — ${today}`
+    const docRef = await addDoc(collection(db, 'notes'), {
+      title,
+      content: '',
+      contentJson: {
+        type: 'doc',
+        content: [
+          { type: 'paragraph' },
+        ],
+      },
+      tags: ['journal'],
+      type: 'journal',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+    setAutoEditDocId(docRef.id)
+    setActivePath(`firestore:journal/${docRef.id}`)
+    setActiveListId(null)
+    if (isMobileViewport) setSidebarOpen(false)
   }
 
   const handleDeleteBrief = async (docItem) => {
@@ -552,6 +579,7 @@ export default function App() {
 
       <AppHeader
         user={user}
+        autoEditDocId={autoEditDocId}
         theme={theme}
         onThemeChange={setTheme}
         version={APP_VERSION}
@@ -573,12 +601,15 @@ export default function App() {
         onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
         onNewNote={handleCreateNote}
         onNewList={() => setShowListModal(true)}
+        onNewJournal={handleCreateJournal}
         onSelectDoc={(path) => {
+          setAutoEditDocId(null)
           setActivePath(path)
           setActiveListId(null)
           if (isMobileViewport) setSidebarOpen(false)
         }}
         onSelectList={(id) => {
+          setAutoEditDocId(null)
           setActiveListId(id)
           setActivePath(null)
           if (isMobileViewport) setSidebarOpen(false)
@@ -591,6 +622,7 @@ export default function App() {
         listStats={listStats}
         briefGreeting={briefGreeting}
         user={user}
+        autoEditDocId={autoEditDocId}
         onSaveDoc={handleUpdateNoteInline}
         onDeleteDoc={(docItem) => openConfirmDialog({
           title: docItem?.isBrief ? 'Delete brief?' : 'Delete note?',

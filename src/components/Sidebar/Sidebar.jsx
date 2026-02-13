@@ -1,6 +1,6 @@
 import { forwardRef, useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
-import { FilePlus2, ListTodo, PanelLeft, PanelLeftClose } from 'lucide-react'
+import { BookOpen, FilePlus2, ListTodo, PanelLeft, PanelLeftClose } from 'lucide-react'
 import SearchBar from '../SearchBar/SearchBar'
 import DocList from '../DocList/DocList'
 import './Sidebar.scss'
@@ -22,6 +22,7 @@ const Sidebar = forwardRef(function Sidebar({
   onToggleSidebar,
   onNewNote,
   onNewList,
+  onNewJournal,
 }, searchRef) {
   const contentRef = useRef(null)
   const actionsRef = useRef(null)
@@ -90,6 +91,16 @@ const Sidebar = forwardRef(function Sidebar({
             title="New list"
           >
             <ListTodo aria-hidden="true" size={16} strokeWidth={2} />
+          </button>
+
+          <button
+            className="sidebar__action-btn"
+            type="button"
+            onClick={onNewJournal}
+            aria-label="New journal"
+            title="New journal"
+          >
+            <BookOpen aria-hidden="true" size={16} strokeWidth={2} />
           </button>
         </div>
 
