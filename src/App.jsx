@@ -131,6 +131,7 @@ export default function App() {
           rawTags: frontTags,
           isJournal,
           isBrief,
+          isDraft: Boolean(data.isDraft),
           source: 'firestore',
           id: snap.id,
         }
@@ -198,6 +199,7 @@ export default function App() {
       },
       tags: [],
       type: 'note',
+      isDraft: true,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
@@ -215,6 +217,7 @@ export default function App() {
       contentJson: contentJson || null,
       tags: Array.isArray(tags) ? tags : [],
       updatedAt: serverTimestamp(),
+      isDraft: false,
     })
     if (autoEditDocId === docItem.id) {
       setAutoEditDocId(null)
@@ -244,6 +247,7 @@ export default function App() {
       },
       tags: ['journal'],
       type: 'journal',
+      isDraft: true,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
