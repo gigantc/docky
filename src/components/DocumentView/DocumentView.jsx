@@ -33,7 +33,7 @@ export default function DocumentView({
     setIsEditing(false)
     setTitleDraft(activeDoc.title || '')
     setTagsDraft((activeDoc.rawTags || activeDoc.tags || []).join(', '))
-    setShowPreview(true)
+    setShowPreview(typeof window !== 'undefined' ? window.innerWidth > 900 : true)
 
     if (editor) {
       editor.setEditable(false)
@@ -82,6 +82,9 @@ export default function DocumentView({
           <h1>{briefGreeting || activeDoc.title}</h1>
           {activeDoc.isBrief && <div className="doc__date">{activeDoc.title}</div>}
           {!activeDoc.isBrief && activeDoc.created && <div className="doc__date">{activeDoc.created}</div>}
+          {!activeDoc.isBrief && (
+            <div className="doc__kind">{activeDoc.isJournal ? 'Journal' : 'Note'}</div>
+          )}
           {activeDoc.tags.length > 0 && !isEditing && (
             <div className="doc__tags">
               {activeDoc.tags.map((tag) => <span key={tag} className="tag">{tag}</span>)}
