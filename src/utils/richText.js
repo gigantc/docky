@@ -7,7 +7,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import { generateHTML } from '@tiptap/html'
 
 export const richTextExtensions = [
-  StarterKit,
+  StarterKit.configure({ link: false }),
   Link.configure({ openOnClick: false }),
   TaskList,
   TaskItem.configure({ nested: true }),

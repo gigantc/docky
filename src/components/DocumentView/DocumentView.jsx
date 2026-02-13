@@ -35,7 +35,7 @@ export default function DocumentView({
     setTagsDraft((activeDoc.rawTags || activeDoc.tags || []).join(', '))
 
     if (editor) {
-      editor.setEditable(false)
+      editor.setEditable(Boolean(autoStartEdit && editable))
       editor.commands.setContent(activeDoc.contentJson || markdownToInitialHtml(activeDoc.content || ''), false)
     }
   }, [activeDoc.id, activeDoc.title, activeDoc.content, activeDoc.contentJson, activeDoc.rawTags, activeDoc.tags, editor, autoStartEdit, editable])
