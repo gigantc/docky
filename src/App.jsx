@@ -205,6 +205,24 @@ export default function App() {
     if (isMobileViewport) setSidebarOpen(false)
   }
 
+  const handleUpdateNoteInline = async (docItem, { title, content, contentJson, tags }) => {
+    if (!docItem?.id) return
+    await updateDoc(doc(db, 'notes', docItem.id), {
+      title: title?.trim() || 'Untitled',
+      content: content || '',
+      contentJson: contentJson || null,
+      tags: Array.isArray(tags) ? tags : [],
+      updatedAt: serverTimestamp(),
+    })
+  }
+
+  const handleDeleteNoteInline = async (docItem) => {
+    if (!docItem?.id) return
+    await deleteDoc(doc(db, 'notes', docItem.id))
+    setActivePath(null)
+    setActiveListId(null)
+  }
+
   const handleDeleteBrief = async (docItem) => {
 
     if (!docItem?.id) return
