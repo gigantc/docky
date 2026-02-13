@@ -22,7 +22,6 @@ import { renderMarkdownWithOutline, parseBriefMarkets } from './utils/markdown'
 import { richDocToHtml } from './utils/richText'
 import { formatDate } from './utils/date'
 import { createId, sortDocs } from './utils/helpers'
-import EditorModal from './components/EditorModal/EditorModal'
 import NewListModal from './components/NewListModal/NewListModal'
 import ConfirmDialog from './components/ConfirmDialog/ConfirmDialog'
 import AppHeader from './components/AppHeader/AppHeader'
@@ -41,12 +40,6 @@ export default function App() {
   const [activePath, setActivePath] = useState(docs[0]?.path)
   const [openSections, setOpenSections] = useState({ notes: true, lists: true, journal: true, briefs: true })
   const [user, setUser] = useState(null)
-  const [showEditor, setShowEditor] = useState(false)
-  const [editorId, setEditorId] = useState(null)
-  const [editorTitle, setEditorTitle] = useState('')
-  const [editorContent, setEditorContent] = useState('')
-  const [editorTags, setEditorTags] = useState('')
-  const [editorSaving, setEditorSaving] = useState(false)
   const [showListModal, setShowListModal] = useState(false)
   const [listTitle, setListTitle] = useState('')
   const [listSaving, setListSaving] = useState(false)
@@ -190,89 +183,30 @@ export default function App() {
     }
   }, [docs, activePath, activeListId])
 
-  const openEditor = (docItem) => {
+
+  const handleCreateNote = async () => {
     if (!user) return
-    if (docItem) {
-      setEditorId(docItem.id)
-      setEditorTitle(docItem.title)
-      setEditorContent(docItem.content)
-      setEditorTags((docItem.rawTags || docItem.tags || []).join(', '))
-    } else {
-      setEditorId(null)
-      setEditorTitle('')
-      setEditorContent('')
-      setEditorTags('')
-    }
-    setShowEditor(true)
-  }
-
-  const handleSaveNote = async () => {
-    if (!user) return
-    setEditorSaving(true)
-    const tags = editorTags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean)
-
-    try {
-      if (editorId) {
-        await updateDoc(doc(db, 'notes', editorId), {
-          title: editorTitle.trim() || 'Untitled',
-          content: editorContent,
-          contentJson: null,
-          tags,
-          updatedAt: serverTimestamp(),
-        })
-      } else {
-        await addDoc(collection(db, 'notes'), {
-          title: editorTitle.trim() || 'Untitled',
-          content: editorContent,
-          contentJson: null,
-          tags,
-          type: 'note',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        })
-      }
-      setShowEditor(false)
-      setEditorId(null)
-      setEditorTitle('')
-      setEditorContent('')
-      setEditorTags('')
-    } finally {
-      setEditorSaving(false)
-    }
-  }
-
-  const handleDeleteNote = async () => {
-    if (!editorId) return
-    await deleteDoc(doc(db, 'notes', editorId))
-    setShowEditor(false)
-    setEditorId(null)
-    setEditorTitle('')
-    setEditorContent('')
-    setEditorTags('')
-  }
-
-  const handleUpdateNoteInline = async (docItem, { title, content, contentJson, tags }) => {
-    if (!docItem?.id) return
-    await updateDoc(doc(db, 'notes', docItem.id), {
-      title: title?.trim() || 'Untitled',
-      content: content || '',
-      contentJson: contentJson || null,
-      tags: Array.isArray(tags) ? tags : [],
+    const docRef = await addDoc(collection(db, 'notes'), {
+      title: 'Untitled',
+      content: '',
+      contentJson: {
+        type: 'doc',
+        content: [
+          { type: 'paragraph' },
+        ],
+      },
+      tags: [],
+      type: 'note',
+      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
-  }
-
-  const handleDeleteNoteInline = async (docItem) => {
-    if (!docItem?.id) return
-    await deleteDoc(doc(db, 'notes', docItem.id))
-    setActivePath(null)
+    setActivePath(`firestore:note/${docRef.id}`)
     setActiveListId(null)
+    if (isMobileViewport) setSidebarOpen(false)
   }
 
   const handleDeleteBrief = async (docItem) => {
+
     if (!docItem?.id) return
     await deleteDoc(doc(db, 'notes', docItem.id))
     setActivePath(null)
@@ -580,25 +514,6 @@ export default function App() {
 
   return (
     <div className="app" ref={appRef}>
-      {showEditor && (
-        <EditorModal
-          editorId={editorId}
-          editorTitle={editorTitle}
-          editorContent={editorContent}
-          editorTags={editorTags}
-          editorSaving={editorSaving}
-          onTitleChange={setEditorTitle}
-          onContentChange={setEditorContent}
-          onTagsChange={setEditorTags}
-          onSave={handleSaveNote}
-          onDelete={() => openConfirmDialog({
-            title: 'Delete note?',
-            body: <>Delete <strong>{editorTitle.trim() || 'Untitled'}</strong>? This cannot be undone.</>,
-            onConfirm: handleDeleteNote,
-          })}
-          onClose={() => setShowEditor(false)}
-        />
-      )}
 
       {showListModal && (
         <NewListModal
@@ -638,7 +553,7 @@ export default function App() {
         activeListId={activeListId}
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
-        onNewNote={() => openEditor()}
+        onNewNote={handleCreateNote}
         onNewList={() => setShowListModal(true)}
         onSelectDoc={(path) => {
           setActivePath(path)
