@@ -247,6 +247,23 @@ export default function App() {
     setEditorTags('')
   }
 
+  const handleUpdateNoteInline = async (docItem, { title, content, tags }) => {
+    if (!docItem?.id) return
+    await updateDoc(doc(db, 'notes', docItem.id), {
+      title: title?.trim() || 'Untitled',
+      content: content || '',
+      tags: Array.isArray(tags) ? tags : [],
+      updatedAt: serverTimestamp(),
+    })
+  }
+
+  const handleDeleteNoteInline = async (docItem) => {
+    if (!docItem?.id) return
+    await deleteDoc(doc(db, 'notes', docItem.id))
+    setActivePath(null)
+    setActiveListId(null)
+  }
+
   const handleDeleteBrief = async (docItem) => {
     if (!docItem?.id) return
     await deleteDoc(doc(db, 'notes', docItem.id))
@@ -633,12 +650,12 @@ export default function App() {
         listStats={listStats}
         briefGreeting={briefGreeting}
         user={user}
-        onEditDoc={openEditor}
-        onDeleteBrief={(docItem) => openConfirmDialog({
-          title: 'Delete brief?',
-          body: <>Delete <strong>{docItem.title}</strong>? This cannot be undone.</>,
-          confirmLabel: 'Delete Brief',
-          onConfirm: () => handleDeleteBrief(docItem),
+        onSaveDoc={handleUpdateNoteInline}
+        onDeleteDoc={(docItem) => openConfirmDialog({
+          title: docItem?.isBrief ? 'Delete brief?' : 'Delete note?',
+          body: <>Delete <strong>{docItem?.title || 'Untitled'}</strong>? This cannot be undone.</>,
+          confirmLabel: docItem?.isBrief ? 'Delete Brief' : 'Delete Note',
+          onConfirm: () => (docItem?.isBrief ? handleDeleteBrief(docItem) : handleDeleteNoteInline(docItem)),
         })}
         onAddListItem={handleAddListItem}
         onToggleListItem={handleToggleListItem}

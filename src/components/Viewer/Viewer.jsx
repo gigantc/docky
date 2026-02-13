@@ -8,8 +8,8 @@ export default function Viewer({
   listStats,
   briefGreeting,
   user,
-  onEditDoc,
-  onDeleteBrief,
+  onSaveDoc,
+  onDeleteDoc,
   onAddListItem,
   onToggleListItem,
   onDeleteListItem,
@@ -43,8 +43,8 @@ export default function Viewer({
           activeDoc={activeDoc}
           briefGreeting={briefGreeting}
           user={user}
-          onEdit={onEditDoc}
-          onDeleteBrief={onDeleteBrief}
+          onSave={onSaveDoc}
+          onDelete={onDeleteDoc}
         />
       </main>
     )

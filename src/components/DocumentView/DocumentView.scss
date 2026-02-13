@@ -167,3 +167,62 @@
     line-height: var(--lh-body);
   }
 }
+
+
+.doc__panel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.doc__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: v.$white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  @include m.state-layer;
+
+  &:hover {
+    background: rgba(v.$white, 0.08);
+  }
+}
+
+.doc__icon--danger {
+  color: v.$danger;
+}
+
+.doc__editor {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.doc__label {
+  font-size: var(--type-meta);
+  color: v.$muted;
+}
+
+.doc__input,
+.doc__textarea {
+  @include m.input-field;
+}
+
+.doc__textarea {
+  min-height: 220px;
+  resize: vertical;
+}
+
+.doc__preview {
+  margin-top: 8px;
+  padding: 14px;
+  border: 1px solid rgba(v.$white, 0.08);
+  border-radius: v.$radius-m;
+  background: rgba(v.$white, 0.02);
+}
