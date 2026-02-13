@@ -216,6 +216,9 @@ export default function App() {
       tags: Array.isArray(tags) ? tags : [],
       updatedAt: serverTimestamp(),
     })
+    if (autoEditDocId === docItem.id) {
+      setAutoEditDocId(null)
+    }
   }
 
   const handleDeleteNoteInline = async (docItem) => {
