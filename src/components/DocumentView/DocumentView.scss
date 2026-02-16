@@ -180,6 +180,8 @@
     color: var(--accent-light);
     text-decoration: none;
     border-bottom: 1px solid rgba(var(--accent-light-rgb), 0.4);
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .tiptap code {
@@ -216,13 +218,20 @@
 
 
 @media (max-width: 900px) {
+  .doc {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .doc__header,
+  .doc__editor-meta,
+  .doc__content {
+    max-width: 100%;
+  }
+
   .doc__toolbar {
-    position: static;
-    z-index: 2;
-    padding: 6px 0 8px;
-    background: linear-gradient(180deg, rgba(14, 17, 23, 0.96), rgba(14, 17, 23, 0.88));
+    max-width: 100%;
     overflow-x: auto;
-    flex-wrap: nowrap;
   }
 
   .doc__toolbar .doc__icon {
@@ -241,3 +250,4 @@
     margin-top: 10px;
   }
 }
+

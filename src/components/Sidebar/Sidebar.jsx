@@ -111,9 +111,8 @@ const Sidebar = forwardRef(function Sidebar({
           aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
           data-tooltip={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
         >
-          {sidebarOpen
-            ? <PanelLeftClose aria-hidden="true" size={16} strokeWidth={2} />
-            : <PanelLeft aria-hidden="true" size={16} strokeWidth={2} />}
+          <PanelLeftClose className={`sidebar__toggle-icon ${sidebarOpen ? 'is-visible' : ''}`} aria-hidden="true" size={16} strokeWidth={2} />
+          <PanelLeft className={`sidebar__toggle-icon ${!sidebarOpen ? 'is-visible' : ''}`} aria-hidden="true" size={16} strokeWidth={2} />
         </button>
       </div>
 

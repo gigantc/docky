@@ -43,6 +43,7 @@
 
 .sidebar__action-btn,
 .sidebar__toggle {
+  position: relative;
   width: 34px;
   height: 34px;
   border-radius: 10px;
@@ -72,6 +73,19 @@
   border: 1px solid rgba(v.$white, 0.18);
   background: rgba(v.$white, 0.03);
   z-index: 6;
+  overflow: hidden;
+}
+
+.sidebar__toggle-icon {
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.9) rotate(-12deg);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.sidebar__toggle-icon.is-visible {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
 }
 
 .sidebar__content {
@@ -122,5 +136,12 @@
     height: 30px;
     flex: 0 0 30px;
     border-radius: 9px;
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 42px;
+    min-width: 42px;
   }
 }

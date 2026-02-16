@@ -7,6 +7,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
   background: v.$gradient-bg, v.$black;
 }
 
@@ -19,5 +20,6 @@
   .viewer {
     padding: 15px;
     overflow: auto;
+    max-width: 100%;
   }
 }
