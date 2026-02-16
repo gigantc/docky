@@ -94,7 +94,7 @@
 
 @media (max-width: 900px) {
   .app {
-    --sidebar-width: 56px;
+    --sidebar-width: 48px;
     --sidebar-panel-width: 280px;
     grid-template-columns: var(--sidebar-width) 1fr;
     grid-template-areas:
@@ -109,7 +109,7 @@
   }
 
   .viewer {
-    padding: 24px 20px;
+    padding: 15px;
     overflow: auto;
   }
 
