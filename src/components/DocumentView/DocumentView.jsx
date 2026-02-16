@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
-import { Bold, Heading1, Heading2, List, ListChecks, ListOrdered, Link as LinkIcon, Pencil, Save, Trash2, X } from 'lucide-react'
+import { Bold, Heading1, Heading2, Italic, List, ListChecks, ListOrdered, Link as LinkIcon, Pencil, Save, Trash2, Underline as UnderlineIcon, X } from 'lucide-react'
 import { markdownToInitialHtml, richTextExtensions } from '../../utils/richText'
 import './DocumentView.scss'
 
@@ -121,8 +121,6 @@ export default function DocumentView({
             {tool(activeDoc.isBrief ? 'Delete brief' : 'Delete note', () => onDelete(activeDoc), false, <Trash2 aria-hidden="true" size={16} />)}
           </div>
         )}
-      </header>
-
       {isEditing && editable && (
         <div className="doc__editor-meta is-sticky">
           <label className="doc__label">Tags</label>
@@ -131,6 +129,8 @@ export default function DocumentView({
           {editor && (
             <div className="doc__toolbar">
               {tool('Bold', () => editor.chain().focus().toggleBold().run(), editor.isActive('bold'), <Bold aria-hidden="true" size={14} />)}
+              {tool('Italic', () => editor.chain().focus().toggleItalic().run(), editor.isActive('italic'), <Italic aria-hidden="true" size={14} />)}
+              {tool('Underline', () => editor.chain().focus().toggleUnderline().run(), editor.isActive('underline'), <UnderlineIcon aria-hidden="true" size={14} />)}
               {tool('H1', () => editor.chain().focus().toggleHeading({ level: 1 }).run(), editor.isActive('heading', { level: 1 }), <Heading1 aria-hidden="true" size={14} />)}
               {tool('H2', () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive('heading', { level: 2 }), <Heading2 aria-hidden="true" size={14} />)}
               {tool('Bullet list', () => editor.chain().focus().toggleBulletList().run(), editor.isActive('bulletList'), <List aria-hidden="true" size={14} />)}
@@ -144,6 +144,7 @@ export default function DocumentView({
           )}
         </div>
       )}
+      </header>
 
       <div className={`doc__content ${isEditing ? 'is-editing' : ''}`}>
         <EditorContent editor={editor} />

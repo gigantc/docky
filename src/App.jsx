@@ -30,7 +30,7 @@ import Sidebar from './components/Sidebar/Sidebar'
 import Viewer from './components/Viewer/Viewer'
 import LoginPage from './components/LoginPage/LoginPage'
 
-const APP_VERSION = '0.1.0'
+const APP_VERSION = '0.1.2'
 
 export default function App() {
   const [firestoreDocs, setFirestoreDocs] = useState([])
@@ -567,9 +567,9 @@ export default function App() {
 
   useEffect(() => {
     if (!appRef.current) return
-    const targetWidth = sidebarOpen
-      ? (isMobileViewport ? 280 : 320)
-      : 56
+    const targetWidth = isMobileViewport
+      ? 42
+      : (sidebarOpen ? 320 : 56)
 
     gsap.to(appRef.current, {
       '--sidebar-width': `${targetWidth}px`,

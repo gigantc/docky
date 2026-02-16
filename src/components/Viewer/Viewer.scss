@@ -6,9 +6,20 @@
   border-right: 1px solid rgba(v.$white, 0.06);
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
   background: v.$gradient-bg, v.$black;
 }
 
 .empty {
   color: v.$muted;
+}
+
+
+@media (max-width: 900px) {
+  .viewer {
+    padding: 15px;
+    overflow: auto;
+    max-width: 100%;
+  }
 }

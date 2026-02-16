@@ -94,7 +94,7 @@
 
 @media (max-width: 900px) {
   .app {
-    --sidebar-width: 56px;
+    --sidebar-width: 42px;
     --sidebar-panel-width: 280px;
     grid-template-columns: var(--sidebar-width) 1fr;
     grid-template-areas:
@@ -109,13 +109,14 @@
   }
 
   .viewer {
-    padding: 24px 20px;
-    overflow: auto;
+    transition: transform 0.34s ease;
+    will-change: transform;
   }
 
-  .rightbar {
-    overflow: visible;
+  .sidebar.sidebar--open ~ .viewer {
+    transform: translateX(calc(var(--sidebar-panel-width) - var(--sidebar-width)));
   }
+
 }
 
 
@@ -163,4 +164,11 @@
   transition-delay: 1s;
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .tooltip-trigger[data-tooltip]::after,
+  .tooltip-trigger[data-tooltip]::before {
+    display: none !important;
+  }
 }
