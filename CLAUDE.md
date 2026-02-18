@@ -43,19 +43,19 @@ When Firestore data exists for a content type, it takes precedence and local fil
 
 ### Key files
 
-- `src/App.jsx` - Main component (~690 lines). State management, Firestore subscriptions, event handlers, search, and keyboard navigation. Delegates rendering to extracted components.
+- `src/App.jsx` - Main component. State management, Firestore subscriptions, event handlers, search, and keyboard navigation. Delegates rendering to extracted components. Includes loading gate (`authReady`, `docsReady`, `listsReady`) that shows a splash loader until auth + data are resolved.
 - `src/firebase.js` - Firebase init and re-exports of auth/firestore SDK methods. All Firestore imports come through here.
 - `src/App.scss` - CSS Grid layout: 3-column (280px sidebar, 1fr main, 280px rightbar).
 - `src/styles/_variables.scss` - All design tokens (colors, typography, radii, shadows, transitions).
 - `src/styles/_mixins.scss` - Reusable mixins: `surface-tint`, `state-layer`, `input-field`, `focus-ring`, `button-reset`.
 - `src/styles/_base.scss` - Reset, body defaults, `.tag` and `.highlight` base classes.
-- `src/utils/richText.js` - Shared TipTap extension config and markdown-to-HTML/rich-doc-to-HTML conversion.
+- `src/utils/richText.js` - Shared TipTap extension config and markdown-to-HTML/rich-doc-to-HTML conversion. Note: `StarterKit` v3.19+ includes `Underline` — do not add it separately.
 - `scripts/docky-cli.js` - Node CLI for Firestore CRUD. Authenticates with `DOCKY_EMAIL`/`DOCKY_PASSWORD` env vars.
 
 ### Component structure
 
 - `AppHeader/` - Top header bar
-- `Sidebar/` - Left sidebar with collapsible rail (42px collapsed on mobile), drawer overlay
+- `Sidebar/` - Left sidebar with collapsible rail (42px collapsed on mobile), drawer overlay. Collapsed layout uses `order: -1` on toggle to keep it above action buttons — no absolute positioning.
 - `Viewer/` - Main content area wrapping DocumentView and ListView
 - `DocumentView/` - Inline rich-text editing and reading for notes/journals/briefs (TipTap)
 - `ListView/` - Checklist view with inline item editing, drag-and-drop reorder
@@ -64,6 +64,7 @@ When Firestore data exists for a content type, it takes precedence and local fil
 - `DocList/` - Document list rendering (DocListSection, DocListItem)
 - `SearchBar/` - Search input
 - `NewListModal/` - Modal for creating new lists
+- `Tooltip/` - Portal-based tooltip using document event delegation on `[data-tooltip]` elements. Positions below by default, flips above near viewport bottom, arrow tracks trigger center. 500ms delay with warm-window (300ms) for quick successive hovers. Hidden on touch devices.
 - `ConfirmDialog/` - Themed confirmation dialog (replaces browser alerts)
 - `Auth/` and `LoginPage/` - Authentication UI
 
@@ -89,7 +90,8 @@ Notes and journals use **inline rich-text editing** powered by TipTap (no modal 
 - Rich-text content stored as TipTap JSON doc, converted to HTML via `richDocToHtml()` for display
 - Intersection Observer syncs active heading in right sidebar outline
 - GSAP animations for list item completion (promise-based, awaited before Firestore update)
-- Themed tooltips with 1s delay on icon controls
+- Portal-based tooltips via `Tooltip` component — uses `mouseover`/`mouseout` delegation on `[data-tooltip]` attributes (no per-element wrappers). Add `data-tooltip="Label"` to any element to enable.
+- Search matches against title, slug, content, and tags for docs; title and item text for lists
 - Keyboard shortcuts: `/` search, arrow keys navigate, `Esc` close
 
 ## Styling Guide (M3 Dark Theme)

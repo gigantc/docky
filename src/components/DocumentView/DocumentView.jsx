@@ -77,14 +77,14 @@ export default function DocumentView({
   }
 
   const tool = (label, action, active = false, icon = null) => (
-    <button className={`doc__icon tooltip-trigger ${active ? 'is-active' : ''}`} type="button" onClick={action} aria-label={label} data-tooltip={label}>
+    <button className={`doc__icon ${active ? 'is-active' : ''}`} type="button" onClick={action} aria-label={label} data-tooltip={label}>
       {icon}
     </button>
   )
 
   return (
     <article className="doc">
-      <header className={`doc__header ${isEditing ? 'is-sticky' : ''}`}>
+      <header className="doc__header">
         <div className="doc__title">
           {isEditing && editable ? (
             <input

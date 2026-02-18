@@ -10,12 +10,19 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 36px 0 28px 0;
+  background: linear-gradient(180deg, rgba(14, 17, 23, 0.97), rgba(14, 17, 23, 0.88));
+  backdrop-filter: blur(4px);
 }
 
 .list__header h1 {
   margin: 0 0 6px;
-  font-size: v.$fs-xl;
+  font-size: var(--type-h1);
   font-weight: v.$fw-bold;
   letter-spacing: 0.01em;
 }
@@ -26,67 +33,48 @@
   gap: 6px;
 }
 
-.list__title-display {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.list__title-input {
+  width: 100%;
+  padding: 0 0 5px 0;
+  margin: 0 0 6px;
+  border: none;
+  border-bottom: 2px solid rgba(v.$white, 0.15);
+  border-radius: 0;
+  background: none;
+  color: v.$white;
+  font-size: var(--type-h1);
+  font-weight: v.$fw-bold;
+  letter-spacing: 0.01em;
+  outline: none;
+  transition: border-color v.$transition-normal;
+
+  &:focus {
+    border-bottom-color: var(--accent-light);
+  }
 }
 
-.list__title-edit {
-  display: flex;
+.list__panel {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  margin-left: auto;
 }
 
-.list__title-input {
-  @include m.input-field;
-  min-width: 240px;
-}
-
-// M3 outlined buttons
-.list__rename,
-.list__rename-save,
-.list__rename-cancel {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(v.$white, 0.12);
+.list__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
   background: transparent;
   color: v.$white;
-  width: 36px;
-  height: 36px;
-  border-radius: v.$radius-pill;
-  font-size: v.$fs-sm;
-  cursor: pointer;
-  @include m.state-layer;
-
-  @include m.focus-ring;
-}
-
-// M3 text button (cancel)
-.list__rename-cancel {
-  border: none;
-  color: var(--accent-light);
-}
-
-// M3 danger outlined button
-.list__delete {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(v.$danger, 0.45);
-  background: transparent;
-  color: v.$danger;
-  width: 40px;
-  height: 40px;
-  border-radius: v.$radius-pill;
-  font-size: v.$fs-sm;
   cursor: pointer;
   @include m.state-layer;
 
   &:hover {
-    background: rgba(v.$danger, 0.12);
+    background: rgba(v.$white, 0.08);
   }
 }
 
@@ -98,17 +86,27 @@
 .list__composer {
   display: flex;
   gap: 10px;
-  margin: 18px 0 20px;
+  flex: 1 0 100%;
+  margin-top: 10px;
 }
 
 .list__input {
   flex: 1;
-  @include m.input-field;
+  padding: 0 0 5px 0;
+  border: none;
+  border-bottom: 2px solid rgba(v.$white, 0.15);
+  border-radius: 0;
+  background: none;
+  color: v.$white;
+  font-size: v.$fs-base;
+  outline: none;
+  transition: border-color v.$transition-normal;
+
+  &:focus {
+    border-bottom-color: var(--accent-light);
+  }
 }
 
-.list__add-button {
-  @include m.button-filled;
-}
 
 .list__items {
   list-style: none;
@@ -260,9 +258,19 @@
 }
 
 @media (max-width: 900px) {
-  .list__header h1 {
-    font-size: var(--type-h1);
-    line-height: 1.2;
+  .list__header {
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 15px;
+  }
+
+  .list__panel {
+    order: -1;
+    margin-left: 0;
+  }
+
+  .list__composer {
+    width: 100%;
   }
 
   .list__meta {

@@ -65,10 +65,10 @@ export default function SortableListItem({
             }}
             autoFocus
           />
-          <button className="list-item__action tooltip-trigger" type="button" onClick={onSaveEdit} aria-label="Save item" data-tooltip="Save">
+          <button className="list-item__action" type="button" onClick={onSaveEdit} aria-label="Save item" data-tooltip="Save">
             <Save aria-hidden="true" size={14} strokeWidth={2} />
           </button>
-          <button className="list-item__action tooltip-trigger" type="button" onClick={onCancelEdit} aria-label="Cancel edit" data-tooltip="Cancel">
+          <button className="list-item__action" type="button" onClick={onCancelEdit} aria-label="Cancel edit" data-tooltip="Cancel">
             <X aria-hidden="true" size={14} strokeWidth={2} />
           </button>
         </div>
@@ -76,7 +76,7 @@ export default function SortableListItem({
         <>
           <span className="list-item__text">{item.text}</span>
           <button
-            className="list-item__action tooltip-trigger"
+            className="list-item__action"
             type="button"
             onClick={(event) => {
               event.stopPropagation()
@@ -91,7 +91,7 @@ export default function SortableListItem({
       )}
 
       <button
-        className="list-item__delete tooltip-trigger"
+        className="list-item__delete"
         type="button"
         onClick={onDelete}
         aria-label="Delete item"

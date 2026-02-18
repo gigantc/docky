@@ -2,7 +2,7 @@
 
 .viewer {
   grid-area: viewer;
-  padding: 36px 44px;
+  padding: 0 44px;
   border-right: 1px solid rgba(v.$white, 0.06);
   min-height: 0;
   overflow-y: auto;
@@ -18,7 +18,7 @@
 
 @media (max-width: 900px) {
   .viewer {
-    padding: 15px;
+    padding: 0 15px;
     overflow: auto;
     max-width: 100%;
   }

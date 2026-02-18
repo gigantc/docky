@@ -1,0 +1,54 @@
+@use '../../styles/variables' as v;
+
+.tooltip-portal {
+  position: fixed;
+  z-index: 9999;
+  background: v.$green;
+  color: #fff;
+  font-size: v.$fs-sm;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: 10px;
+  padding: 8px 10px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  animation: tooltip-in 0.14s ease both;
+
+  // Arrow (positioned at trigger center via --arrow-x)
+  &::after {
+    content: '';
+    position: absolute;
+    left: var(--arrow-x, 50%);
+    transform: translateX(-50%);
+    width: 12px;
+    height: 6px;
+    background: v.$green;
+  }
+
+  // Arrow above tooltip (tooltip below trigger) — default
+  &:not(&--above)::after {
+    top: -5px;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  // Arrow below tooltip (tooltip above trigger)
+  &--above::after {
+    bottom: -5px;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tooltip-slide, 4px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tooltip-portal--above {
+  --tooltip-slide: -4px;
+}

@@ -28,9 +28,10 @@ import AppHeader from './components/AppHeader/AppHeader'
 import Rightbar from './components/Rightbar/Rightbar'
 import Sidebar from './components/Sidebar/Sidebar'
 import Viewer from './components/Viewer/Viewer'
+import Tooltip from './components/Tooltip/Tooltip'
 import LoginPage from './components/LoginPage/LoginPage'
 
-const APP_VERSION = '0.1.3'
+const APP_VERSION = '0.1.4'
 
 export default function App() {
   const [firestoreDocs, setFirestoreDocs] = useState([])
@@ -40,6 +41,9 @@ export default function App() {
   const [activePath, setActivePath] = useState(docs[0]?.path)
   const [openSections, setOpenSections] = useState({ notes: true, lists: true, journal: true, briefs: true })
   const [user, setUser] = useState(null)
+  const [authReady, setAuthReady] = useState(false)
+  const [docsReady, setDocsReady] = useState(false)
+  const [listsReady, setListsReady] = useState(false)
   const [showListModal, setShowListModal] = useState(false)
   const [listTitle, setListTitle] = useState('')
   const [listSaving, setListSaving] = useState(false)
@@ -61,6 +65,7 @@ export default function App() {
 
   useEffect(() => onAuthStateChanged(auth, (nextUser) => {
     setUser(nextUser)
+    setAuthReady(true)
   }), [])
 
   useEffect(() => {
@@ -95,11 +100,13 @@ export default function App() {
   useEffect(() => {
     if (!user) {
       setFirestoreDocs([])
+      setDocsReady(false)
       return undefined
     }
 
     const notesQuery = fsQuery(collection(db, 'notes'), orderBy('updatedAt', 'desc'))
     return onSnapshot(notesQuery, (snapshot) => {
+      setDocsReady(true)
       const nextDocs = snapshot.docs.map((snap) => {
         const data = snap.data() || {}
         const content = data.content || ''
@@ -143,11 +150,13 @@ export default function App() {
   useEffect(() => {
     if (!user) {
       setFirestoreLists([])
+      setListsReady(false)
       return undefined
     }
 
     const listsQuery = fsQuery(collection(db, 'lists'), orderBy('updatedAt', 'desc'))
     return onSnapshot(listsQuery, (snapshot) => {
+      setListsReady(true)
       const nextLists = snapshot.docs.map((snap) => {
         const data = snap.data() || {}
         const items = Array.isArray(data.items) ? data.items : []
@@ -399,7 +408,7 @@ export default function App() {
     const q = query.trim().toLowerCase()
     if (!q) return docs
     return docs.filter((doc) => {
-      const haystack = `${doc.title} ${doc.slug} ${doc.content}`.toLowerCase()
+      const haystack = `${doc.title} ${doc.slug} ${doc.content} ${(doc.tags || []).join(' ')}`.toLowerCase()
       return haystack.includes(q)
     })
   }, [docs, query])
@@ -535,8 +544,8 @@ export default function App() {
 
     gsap.to(appRef.current, {
       '--sidebar-width': `${targetWidth}px`,
-      duration: 0.46,
-      ease: 'power3.inOut',
+      duration: 0.3,
+      ease: 'power2.inOut',
       overwrite: 'auto',
     })
   }, [sidebarOpen, isMobileViewport])
@@ -567,6 +576,17 @@ export default function App() {
   const handleToggleSidebar = useCallback(() => {
     setSidebarOpen((prev) => !prev)
   }, [])
+
+  const appLoading = !authReady || (user && (!docsReady || !listsReady))
+
+  if (appLoading) return (
+    <div className="app-loader">
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 2a7 7 0 1 0 10 10"/>
+      </svg>
+    </div>
+  )
 
   if (!user) {
     return <LoginPage />
@@ -661,6 +681,8 @@ export default function App() {
         snippetMap={snippetMap}
         onNavigate={handleNavigate}
       />
+
+      <Tooltip />
     </div>
   )
 }
