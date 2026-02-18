@@ -9,7 +9,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { Pencil, Save, Trash2, X } from 'lucide-react'
+import { Pencil, Plus, Save, Trash2, X } from 'lucide-react'
 import SortableListItem from './SortableListItem'
 import './ListView.scss'
 
@@ -88,100 +88,76 @@ export default function ListView({
       <header className="list__header">
         <div className="list__title">
           {isEditingListTitle ? (
-            <div className="list__title-edit">
-              <input
-                className="list__title-input"
-                type="text"
-                value={listTitleDraft}
-                onChange={(event) => setListTitleDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault()
-                    handleRename()
-                  }
-                  if (event.key === 'Escape') {
-                    event.preventDefault()
-                    setIsEditingListTitle(false)
-                    setListTitleDraft(activeList.title || '')
-                  }
-                }}
-              />
-              <button
-                className="list__rename-save tooltip-trigger"
-                type="button"
-                onClick={handleRename}
-                aria-label="Save list name"
-                data-tooltip="Save"
-              >
-                <Save aria-hidden="true" size={16} strokeWidth={2} />
-              </button>
-              <button
-                className="list__rename-cancel tooltip-trigger"
-                type="button"
-                onClick={() => {
+            <input
+              className="list__title-input"
+              type="text"
+              value={listTitleDraft}
+              onChange={(event) => setListTitleDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  handleRename()
+                }
+                if (event.key === 'Escape') {
+                  event.preventDefault()
                   setIsEditingListTitle(false)
                   setListTitleDraft(activeList.title || '')
-                }}
-                aria-label="Cancel rename"
-                data-tooltip="Cancel"
-              >
-                <X aria-hidden="true" size={16} strokeWidth={2} />
-              </button>
-            </div>
+                }
+              }}
+              autoFocus
+            />
           ) : (
-            <div className="list__title-display">
-              <h1>{activeList.title}</h1>
-              <button
-                className="list__rename tooltip-trigger"
-                type="button"
-                onClick={() => {
-                  setIsEditingListTitle(true)
-                  setListTitleDraft(activeList.title || '')
-                }}
-                aria-label="Rename list"
-                data-tooltip="Rename list"
-              >
-                <Pencil aria-hidden="true" size={16} strokeWidth={2} />
-              </button>
-            </div>
+            <h1>{activeList.title}</h1>
           )}
           <div className="list__meta">
             {listStats?.completed ?? 0} of {listStats?.total ?? 0} done
           </div>
         </div>
-        <button
-          className="list__delete tooltip-trigger"
-          type="button"
-          onClick={onDeleteList}
-          aria-label="Delete list"
-          data-tooltip="Delete list"
-        >
-          <Trash2 aria-hidden="true" size={16} strokeWidth={2} />
-        </button>
+        <div className="list__panel">
+          {isEditingListTitle ? (
+            <>
+              <button className="list__icon tooltip-trigger" type="button" onClick={handleRename} aria-label="Save list name" data-tooltip="Save">
+                <Save aria-hidden="true" size={16} strokeWidth={2} />
+              </button>
+              <button className="list__icon tooltip-trigger" type="button" onClick={() => { setIsEditingListTitle(false); setListTitleDraft(activeList.title || '') }} aria-label="Cancel rename" data-tooltip="Cancel">
+                <X aria-hidden="true" size={16} strokeWidth={2} />
+              </button>
+            </>
+          ) : (
+            <button className="list__icon tooltip-trigger" type="button" onClick={() => { setIsEditingListTitle(true); setListTitleDraft(activeList.title || '') }} aria-label="Rename list" data-tooltip="Rename list">
+              <Pencil aria-hidden="true" size={16} strokeWidth={2} />
+            </button>
+          )}
+          <button className="list__icon tooltip-trigger" type="button" onClick={onDeleteList} aria-label="Delete list" data-tooltip="Delete list">
+            <Trash2 aria-hidden="true" size={16} strokeWidth={2} />
+          </button>
+        </div>
+        <div className="list__composer">
+          <input
+            className="list__input"
+            type="text"
+            placeholder="Add a new item..."
+            value={newItemText}
+            onChange={(event) => setNewItemText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                handleAdd()
+              }
+            }}
+          />
+          <button
+            className="list__icon tooltip-trigger"
+            type="button"
+            onClick={handleAdd}
+            disabled={!newItemText.trim()}
+            aria-label="Add item"
+            data-tooltip="Add item"
+          >
+            <Plus aria-hidden="true" size={16} strokeWidth={2} />
+          </button>
+        </div>
       </header>
-      <div className="list__composer">
-        <input
-          className="list__input"
-          type="text"
-          placeholder="Add a new item..."
-          value={newItemText}
-          onChange={(event) => setNewItemText(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault()
-              handleAdd()
-            }
-          }}
-        />
-        <button
-          className="list__add-button"
-          type="button"
-          onClick={handleAdd}
-          disabled={!newItemText.trim()}
-        >
-          Add
-        </button>
-      </div>
       <ul className="list__items">
         {listItems.length > 0 && (
           <>

@@ -73,6 +73,8 @@
   background: rgba(v.$white, 0.03);
   z-index: 6;
   overflow: hidden;
+  transition: top 0.35s cubic-bezier(0.2, 0, 0, 1),
+              right 0.35s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .sidebar__toggle-icon {
@@ -148,6 +150,6 @@
 
   .sidebar--collapsed .sidebar__toggle {
     right: 41px;
-    top: 4px;
+    top: 0;
   }
 }

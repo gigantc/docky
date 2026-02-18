@@ -12,6 +12,12 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 36px 0 8px;
+  background: linear-gradient(180deg, rgba(14, 17, 23, 0.97), rgba(14, 17, 23, 0.88));
+  backdrop-filter: blur(4px);
 }
 
 .doc__title {
@@ -22,22 +28,26 @@
 }
 
 
-.doc__header.is-sticky {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  padding: 10px 0 8px;
-  background: linear-gradient(180deg, rgba(14, 17, 23, 0.97), rgba(14, 17, 23, 0.88));
-  backdrop-filter: blur(4px);
-}
 
 .doc__title-input {
-  @include m.input-field;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 0 5px 0;
+  margin: 0 0 10px;
+  border: none;
+  border-bottom: 2px solid rgba(v.$white, 0.15);
+  border-radius: 0;
+  background: none;
+  color: v.$white;
   font-size: var(--type-h1);
   font-weight: v.$fw-bold;
   line-height: 1.2;
-  padding: 8px 10px;
-  max-width: 100%;
+  outline: none;
+  transition: border-color v.$transition-normal;
+
+  &:focus {
+    border-bottom-color: var(--accent-light);
+  }
 }
 
 .doc__header h1 {
@@ -125,7 +135,20 @@
 }
 
 .doc__input {
-  @include m.input-field;
+  width: 100%;
+  padding: 0 0 5px 0;
+  border: none;
+  border-bottom: 2px solid rgba(v.$white, 0.15);
+  border-radius: 0;
+  background: none;
+  color: v.$white;
+  font-size: v.$fs-base;
+  outline: none;
+  transition: border-color v.$transition-normal;
+
+  &:focus {
+    border-bottom-color: var(--accent-light);
+  }
 }
 
 .doc__toolbar {
@@ -212,6 +235,21 @@
   .doc {
     max-width: 100%;
     overflow-x: hidden;
+  }
+
+  .doc__header {
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 15px;
+  }
+
+  .doc__panel {
+    order: -1;
+    margin-left: 0;
+  }
+
+  .doc__title {
+    flex: 1 1 auto;
   }
 
   .doc__header,

@@ -84,7 +84,7 @@ export default function DocumentView({
 
   return (
     <article className="doc">
-      <header className={`doc__header ${isEditing ? 'is-sticky' : ''}`}>
+      <header className="doc__header">
         <div className="doc__title">
           {isEditing && editable ? (
             <input
