@@ -31,7 +31,7 @@ import Viewer from './components/Viewer/Viewer'
 import Tooltip from './components/Tooltip/Tooltip'
 import LoginPage from './components/LoginPage/LoginPage'
 
-const APP_VERSION = '0.1.3'
+const APP_VERSION = '0.1.4'
 
 export default function App() {
   const [firestoreDocs, setFirestoreDocs] = useState([])
