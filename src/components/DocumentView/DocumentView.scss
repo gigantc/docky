@@ -235,7 +235,7 @@
 @media (max-width: 900px) {
   .doc {
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .doc__header {

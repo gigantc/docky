@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import DocumentView from '../DocumentView/DocumentView'
 import ListView from '../ListView/ListView'
 import './Viewer.scss'
@@ -21,9 +22,15 @@ export default function Viewer({
   onRenameList,
   onDragEnd,
 }) {
+  const viewerRef = useRef(null)
+
+  useEffect(() => {
+    if (viewerRef.current) viewerRef.current.scrollTop = 0
+  }, [activeList?.id, activeDoc?.id])
+
   if (activeList) {
     return (
-      <main className="viewer">
+      <main ref={viewerRef} className="viewer">
         <ListView
           activeList={activeList}
           listStats={listStats}
@@ -41,7 +48,7 @@ export default function Viewer({
 
   if (activeDoc) {
     return (
-      <main className="viewer">
+      <main ref={viewerRef} className="viewer">
         <DocumentView
           activeDoc={activeDoc}
           briefGreeting={briefGreeting}
