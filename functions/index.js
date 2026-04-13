@@ -50,7 +50,7 @@ async function requireAuth(req, res, next) {
     const decoded = await admin.auth().verifyIdToken(token)
     req.user = { uid: decoded.uid }
     next()
-  } catch (err) {
+  } catch {
     return res.status(401).json({ error: 'Invalid auth token' })
   }
 }

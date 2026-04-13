@@ -23,189 +23,107 @@ npm run docky:cli -- <command> <type> [options]
 
 ## Architecture
 
-**The Dock** is a personal note/journal/checklist app. React 19 + Vite + Sass frontend, Firebase Auth + Firestore backend, deployed to Netlify.
+**The Dock** is a personal note, journal, brief, and checklist app. React 19 + Vite + Sass frontend, Firebase Auth + Firestore backend, deployed to Netlify.
 
-### Data sources
+### Frontend data sources
 
-Content comes from two sources that get merged:
+The current frontend runtime uses Firestore only:
 
-1. **Local markdown** in `docs/` (notes, journals, briefs) - imported at build time via `import.meta.glob('../docs/**/*.md', { query: '?raw', eager: true })`
-2. **Firestore** collections `notes` and `lists` - subscribed via `onSnapshot` real-time listeners
+1. `notes` for notes, journals, and briefs
+2. `lists` for checklists
 
-When Firestore data exists for a content type, it takes precedence and local files of that type are hidden.
+Both are subscribed via `onSnapshot` listeners in `src/App.jsx`.
+
+`docs/` still exists in the repo, but as reference/spec content rather than an active frontend import path.
+
+### Assistant and integration surfaces
+
+There are backend paths in this repo that are not used by the React frontend but may still be used by assistants or automation:
+
+1. `scripts/docky-cli.js` writes directly to frontend-visible Firestore collections (`notes`, `lists`)
+2. `functions/index.js` exposes a separate authenticated API backed by `users/{uid}/items` and also owns brief-pruning jobs
+
+Do not remove or repurpose Cloud Functions code without checking whether assistant workflows depend on it.
 
 ### Content types
 
 - **Notes** (`notes` collection, `type: "note"`) - user-created notes with tags
-- **Journals** (`notes` collection, `type: "journal"`) - daily entries, also in `docs/journal/`
-- **Briefs** (`notes` collection, `type: "brief"`) - morning market briefs with day-over-day comparison, also in `docs/briefs/`
+- **Journals** (`notes` collection, `type: "journal"`) - daily entries
+- **Briefs** (`notes` collection, `type: "brief"`) - morning market briefs with day-over-day comparison
 - **Lists** (`lists` collection) - checklists with drag-and-drop reorder (dnd-kit) and GSAP completion animations
 
 ### Key files
 
 - `src/App.jsx` - Main component. State management, Firestore subscriptions, event handlers, search, and keyboard navigation. Delegates rendering to extracted components. Includes loading gate (`authReady`, `docsReady`, `listsReady`) that shows a splash loader until auth + data are resolved.
 - `src/firebase.js` - Firebase init and re-exports of auth/firestore SDK methods. All Firestore imports come through here.
-- `src/App.scss` - CSS Grid layout: 3-column (280px sidebar, 1fr main, 280px rightbar).
-- `src/styles/_variables.scss` - All design tokens (colors, typography, radii, shadows, transitions).
-- `src/styles/_mixins.scss` - Reusable mixins: `surface-tint`, `state-layer`, `input-field`, `focus-ring`, `button-reset`.
-- `src/styles/_base.scss` - Reset, body defaults, `.tag` and `.highlight` base classes.
-- `src/utils/richText.js` - Shared TipTap extension config and markdown-to-HTML/rich-doc-to-HTML conversion. Note: `StarterKit` v3.19+ includes `Underline` — do not add it separately.
-- `scripts/docky-cli.js` - Node CLI for Firestore CRUD. Authenticates with `DOCKY_EMAIL`/`DOCKY_PASSWORD` env vars.
+- `src/App.scss` - CSS Grid layout and shared app styling.
+- `src/styles/_variables.scss` - Design tokens.
+- `src/styles/_mixins.scss` - Reusable mixins.
+- `src/styles/_base.scss` - Reset, body defaults, `.tag`, and `.highlight` base classes.
+- `src/utils/richText.js` - Shared TipTap extension config and markdown-to-HTML/rich-doc-to-HTML conversion.
+- `scripts/docky-cli.js` - Node CLI for Firestore CRUD against frontend-visible data.
+- `functions/index.js` - Assistant/integration HTTP API and scheduled brief retention job. Not currently called by the frontend.
 
 ### Component structure
 
 - `AppHeader/` - Top header bar
-- `Sidebar/` - Left sidebar with collapsible rail (42px collapsed on mobile), drawer overlay. Collapsed layout uses `order: -1` on toggle to keep it above action buttons — no absolute positioning.
-- `Viewer/` - Main content area wrapping DocumentView and ListView
-- `DocumentView/` - Inline rich-text editing and reading for notes/journals/briefs (TipTap)
-- `ListView/` - Checklist view with inline item editing, drag-and-drop reorder
+- `Sidebar/` - Left sidebar with collapsible rail and action buttons
+- `Viewer/` - Main content area wrapping `DocumentView` and `ListView`
+- `DocumentView/` - Inline rich-text editing and reading for notes, journals, and briefs
+- `ListView/` - Checklist view with inline item editing and drag-and-drop reorder
 - `ListView/SortableListItem` - Individual draggable list item
-- `Rightbar/` - Right sidebar with sub-components: Outline, Metadata, Related, Backlinks, BriefCompare, ListStats
-- `DocList/` - Document list rendering (DocListSection, DocListItem)
+- `Rightbar/` - Right sidebar with `Outline`, `Metadata`, `Related`, `Backlinks`, `BriefCompare`, and `ListStats`
+- `DocList/` - Document list rendering (`DocListSection`, `DocListItem`)
 - `SearchBar/` - Search input
 - `NewListModal/` - Modal for creating new lists
-- `Tooltip/` - Portal-based tooltip using document event delegation on `[data-tooltip]` elements. Positions below by default, flips above near viewport bottom, arrow tracks trigger center. 500ms delay with warm-window (300ms) for quick successive hovers. Hidden on touch devices.
-- `ConfirmDialog/` - Themed confirmation dialog (replaces browser alerts)
+- `Tooltip/` - Portal-based tooltip using document event delegation on `[data-tooltip]` elements
+- `ConfirmDialog/` - Themed confirmation dialog
 - `Auth/` and `LoginPage/` - Authentication UI
 
 ### Firestore schema
 
-Notes collection documents: `{ title, content, tags[], type, createdAt, updatedAt }`
-Lists collection documents: `{ title, items[{ id, text, completed, createdAt }], createdAt, updatedAt }`
+Frontend schema:
+
+- `notes`: `{ title, content, contentJson?, tags[], type, isDraft?, createdAt, updatedAt }`
+- `lists`: `{ title, items[{ id, text, completed, createdAt }], createdAt, updatedAt }`
+
+Separate Cloud Functions schema:
+
+- `users/{uid}/items`: `{ type, title, body, tags, status, meta, createdAt, updatedAt }`
+
+This functions-backed schema is distinct from the frontend `notes` and `lists` shape.
 
 ### Editing model
 
-Notes and journals use **inline rich-text editing** powered by TipTap (no modal editor). The flow:
-- New notes/journals auto-open in edit mode with TipTap editor
-- Editor toolbar (bold, italic, underline, headings, lists, links, task lists) pins beneath the sticky document header
-- Title edits inline in the document header
-- New unsaved content is tracked as a **draft** — canceling triggers a themed confirm dialog
+Notes and journals use inline rich-text editing powered by TipTap. The flow:
+
+- New notes and journals auto-open in edit mode
+- The toolbar supports bold, italic, underline, headings, lists, links, and task lists
+- Title edits happen inline in the document header
+- New unsaved content is tracked as a draft
 - Auto-edit mode exits after first save
 - List items also support inline editing
 
+Briefs are rendered read-only in the frontend.
+
 ### Patterns
 
-- Custom front-matter parser (no gray-matter library) - supports `title`, `created`, `tags` fields
-- Markdown rendered with `marked.parse()`, custom renderer extracts H2/H3 for outline navigation
-- Rich-text content stored as TipTap JSON doc, converted to HTML via `richDocToHtml()` for display
-- Intersection Observer syncs active heading in right sidebar outline
-- GSAP animations for list item completion (promise-based, awaited before Firestore update)
-- Portal-based tooltips via `Tooltip` component — uses `mouseover`/`mouseout` delegation on `[data-tooltip]` attributes (no per-element wrappers). Add `data-tooltip="Label"` to any element to enable.
-- Search matches against title, slug, content, and tags for docs; title and item text for lists
-- Keyboard shortcuts: `/` search, arrow keys navigate, `Esc` close
+- Markdown rendered with `marked.parse()`, with a custom renderer extracting H2 and H3 headings for the outline
+- Rich-text content stored as TipTap JSON and converted to HTML via `richDocToHtml()`
+- GSAP animations for list item completion, awaited before Firestore update
+- Portal-based tooltips via `Tooltip`
+- Search matches title, slug, content, and tags for docs; title and item text for lists
 
-## Styling Guide (M3 Dark Theme)
+## Styling Guide
 
-The app follows Material Design 3 dark theme principles. **All styling is SCSS only — no inline styles, no CSS-in-JS, no Tailwind.** Each component has its own `.scss` file that imports `_variables` and/or `_mixins`.
+The app is SCSS-only: no inline styles, no CSS-in-JS, no Tailwind.
 
-### Color palette (6 colors only)
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `$black` | `#0e1117` | Base background |
-| `$white` | `#f4fff8` | Primary text |
-| `$muted` | `#b6bfd4` | Secondary text, meta, labels |
-| `$green` | `#0a5c36` | Filled button backgrounds, heading gradients |
-| `$green-light` | `#6fdc9a` | Links, active states, tonal button text, focus rings, text buttons |
-| `$danger` | `#ff6b6b` | Destructive actions |
-
-**Do not add new colors.** Use `rgba()` variants of these 6 for all tints, borders, and overlays.
-
-### Surface tinting (depth via `surface-tint` mixin)
-
-Instead of multiple surface color variables, depth is achieved by overlaying `$green-light` at varying alpha on `$black`:
-
-| Level | Alpha | Usage |
-|-------|-------|-------|
-| 0 | pure `$black` | Viewer background, page bg |
-| 1 | 5% | Sidebar, rightbar, list items |
-| 2 | 8% | Header, modals, rightbar section cards, inputs, auth |
-| 3 | 11% | Hover states |
-| 4 | 14% | Active/selected states |
-
-```scss
-@include m.surface-tint(1); // in component scss
-```
-
-### State layers (interaction feedback via `state-layer` mixin)
-
-All interactive elements (buttons, list items, links) must have visible hover/focus/active feedback. The `state-layer` mixin adds a `::before` overlay:
-
-- Hover: `opacity: 0.08`
-- Focus-visible: `opacity: 0.12`
-- Active: `opacity: 0.12`
-
-```scss
-@include m.state-layer; // requires position: relative (mixin sets it)
-```
-
-**Important:** Elements using `state-layer` must have `position: relative` and child content needs `position: relative; z-index: 1` if it must render above the overlay.
-
-### Button hierarchy (M3 levels)
-
-All buttons use `border-radius: $radius-pill` and get `@include m.state-layer` for interaction feedback.
-
-| Type | Background | Border | Text | Padding | Usage |
-|------|-----------|--------|------|---------|-------|
-| **Filled** | `$green` | none | `$white` | `10px 24px` | Add, Save, Sign In |
-| **Tonal** | `rgba($green-light, 0.15)` | none | `$green-light` | `10px 16px` | New Note, New List |
-| **Outlined** | transparent | `rgba($white, 0.12)` | `$white` | `10px 16px` | Rename, Edit |
-| **Text** | transparent | none | `$green-light` | `10px 12px` | Cancel, ghost buttons |
-| **Danger outlined** | transparent | `rgba($danger, 0.45)` | `$danger` | `10px 16px` | Delete |
-
-### Input fields (M3 filled style via `input-field` mixin)
-
-```scss
-@include m.input-field;
-```
-
-- Top corners rounded (`$radius-m`), bottom corners flat
-- `background: rgba($white, 0.06)`, `border-bottom: 2px solid rgba($white, 0.15)`
-- Focus: `border-bottom-color: $green-light`, `background: rgba($white, 0.08)`
-- **Never** use `background: $black` or `box-shadow: inset` for inputs
-
-### Borders
-
-All panel/card borders must be **visible**: `border: 1px solid rgba($white, 0.06)`. Never use `border-color: $black` (invisible on dark bg).
-
-### Typography scale
-
-| Token | Size | Usage |
-|-------|------|-------|
-| `$fs-xs` | 11px | Error messages, fine print |
-| `$fs-sm` | 12px | Labels, meta text, button text |
-| `$fs-base` | 14px | Body text, list items, inputs (default) |
-| `$fs-md` | 16px | Modal titles, secondary headings |
-| `$fs-lg` | 22px | Brand title, large headings |
-| `$fs-xl` | 28px | Document/list titles (h1) |
-
-Use tokens, not hardcoded px values. Body default is `$fs-base` (14px).
-
-### Focus rings
-
-Use `$green-light`-based rings for accessibility:
-- `$ring`: `0 0 0 2px rgba($green-light, 0.5)` — strong focus
-- `$ring-soft`: `0 0 0 3px rgba($green-light, 0.3)` — subtle focus
-
-Or use the `focus-ring` mixin: `@include m.focus-ring;`
-
-### Link color
-
-Always use `$green-light` for links (not `$green`, which is unreadable on dark backgrounds).
-
-### Adding new components
-
-1. Create `src/components/YourComponent/YourComponent.scss`
-2. Import variables and mixins: `@use '../../styles/variables' as v;` and `@use '../../styles/mixins' as m;`
-3. Use `surface-tint` for background depth, `state-layer` for interactive elements, `input-field` for inputs
-4. Follow the button hierarchy above — pick the correct tier
-5. Use `rgba($white, 0.06)` for borders, never `$black`
-6. Use typography tokens, never hardcoded px
+Current implementation note: the account menu exposes multiple theme accents. If you change styling guidance, keep it aligned with `src/components/Auth/Auth.jsx` and the active theme token system rather than assuming a single hard-coded green theme.
 
 ## Environment
 
-Copy `.env.example` to `.env` with Firebase config. CLI also needs `DOCKY_EMAIL` and `DOCKY_PASSWORD`.
+Copy `.env.example` to `.env` with Firebase config. CLI and assistant tooling also need `DOCKY_EMAIL` and `DOCKY_PASSWORD`.
 
 ## Tech stack
 
-React 19, Vite 7, Sass, Firebase (Auth + Firestore), TipTap (rich-text editor), marked, gsap, @dnd-kit, lucide-react. JavaScript only (no TypeScript). No test framework.
+React 19, Vite 7, Sass, Firebase (Auth + Firestore), TipTap, marked, gsap, `@dnd-kit`, and `lucide-react`. JavaScript only. No test framework.

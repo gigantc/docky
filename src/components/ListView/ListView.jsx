@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   DndContext,
   PointerSensor,
@@ -27,7 +27,7 @@ export default function ListView({
 }) {
   const [newItemText, setNewItemText] = useState('')
   const [isEditingListTitle, setIsEditingListTitle] = useState(false)
-  const [listTitleDraft, setListTitleDraft] = useState('')
+  const [listTitleDraft, setListTitleDraft] = useState(activeList?.title || '')
   const [editingItemId, setEditingItemId] = useState(null)
   const [editingItemDraft, setEditingItemDraft] = useState('')
 
@@ -36,13 +36,6 @@ export default function ListView({
       activationConstraint: { distance: 8 },
     })
   )
-
-  useEffect(() => {
-    setIsEditingListTitle(false)
-    setListTitleDraft(activeList?.title || '')
-    setEditingItemId(null)
-    setEditingItemDraft('')
-  }, [activeList?.id, activeList?.title])
 
   const incompleteItems = useMemo(() => {
     if (!activeList?.items?.length) return []

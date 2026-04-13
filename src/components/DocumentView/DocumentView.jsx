@@ -9,15 +9,14 @@ export default function DocumentView({
   briefGreeting,
   user,
   onSave,
-  onDiscardNew,
   onRequestDiscardNew,
   onDelete,
   autoStartEdit = false,
 }) {
   const editable = user && !activeDoc.isBrief
-  const [isEditing, setIsEditing] = useState(false)
-  const [titleDraft, setTitleDraft] = useState('')
-  const [tagsDraft, setTagsDraft] = useState('')
+  const [isEditing, setIsEditing] = useState(Boolean(autoStartEdit && editable))
+  const [titleDraft, setTitleDraft] = useState(activeDoc.title || '')
+  const [tagsDraft, setTagsDraft] = useState((activeDoc.rawTags || activeDoc.tags || []).join(', '))
   const isDraftDoc = Boolean(activeDoc.isDraft || autoStartEdit)
 
   const initialContent = useMemo(() => {
@@ -31,17 +30,6 @@ export default function DocumentView({
     editable: isEditing,
     immediatelyRender: false,
   })
-
-  useEffect(() => {
-    setIsEditing(Boolean(autoStartEdit && editable))
-    setTitleDraft(activeDoc.title || '')
-    setTagsDraft((activeDoc.rawTags || activeDoc.tags || []).join(', '))
-
-    if (editor) {
-      editor.setEditable(Boolean(autoStartEdit && editable))
-      editor.commands.setContent(activeDoc.contentJson || markdownToInitialHtml(activeDoc.content || ''), false)
-    }
-  }, [activeDoc.id, activeDoc.title, activeDoc.content, activeDoc.contentJson, activeDoc.rawTags, activeDoc.tags, editor, autoStartEdit, editable])
 
   useEffect(() => {
     if (!editor) return

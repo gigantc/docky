@@ -1,27 +1,45 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { gsap } from 'gsap'
-import { arrayMove } from '@dnd-kit/sortable'
 import './App.scss'
 import {
   auth,
-  db,
   onAuthStateChanged,
-  collection,
-  addDoc,
-  doc,
-  updateDoc,
-  deleteDoc,
-  onSnapshot,
-  orderBy,
-  fsQuery,
-  serverTimestamp,
 } from './firebase'
-import { extractInlineTags, uniqueTags } from './utils/tags'
-import { buildSnippet } from './utils/string.jsx'
-import { renderMarkdownWithOutline, parseBriefMarkets } from './utils/markdown'
-import { richDocToHtml } from './utils/richText'
-import { formatDate } from './utils/date'
-import { createId, sortDocs } from './utils/helpers'
+import { sortDocs } from './utils/helpers'
+import {
+  buildBriefGreeting,
+  buildSnippetMap,
+  filterDocs,
+  getActiveDoc,
+  getBacklinks,
+  getBriefCompare,
+  getDocStats,
+  getRelatedDocs,
+  groupDocs,
+} from './features/docs/docsModel'
+import {
+  createDocRecord,
+  deleteDocRecord,
+  subscribeToDocs,
+  updateDocRecord,
+} from './features/docs/docsApi'
+import {
+  addListItem,
+  editListItem,
+  filterLists,
+  getActiveList,
+  getListStats,
+  removeListItem,
+  reorderListItems,
+  toggleListItem,
+} from './features/lists/listsModel'
+import {
+  createListRecord,
+  deleteListRecord,
+  subscribeToLists,
+  updateListItemsRecord,
+  updateListRecord,
+} from './features/lists/listsApi'
 import NewListModal from './components/NewListModal/NewListModal'
 import ConfirmDialog from './components/ConfirmDialog/ConfirmDialog'
 import AppHeader from './components/AppHeader/AppHeader'
@@ -104,45 +122,8 @@ export default function App() {
       return undefined
     }
 
-    const notesQuery = fsQuery(collection(db, 'notes'), orderBy('updatedAt', 'desc'))
-    return onSnapshot(notesQuery, (snapshot) => {
+    return subscribeToDocs((nextDocs) => {
       setDocsReady(true)
-      const nextDocs = snapshot.docs.map((snap) => {
-        const data = snap.data() || {}
-        const content = data.content || ''
-        const contentJson = data.contentJson || null
-        const title = data.title || 'Untitled'
-        const created = formatDate(data.createdAt?.toDate?.() || data.createdAt)
-        const updated = formatDate(data.updatedAt?.toDate?.() || data.updatedAt)
-        const markdownRendered = renderMarkdownWithOutline(content)
-        const html = contentJson ? richDocToHtml(contentJson) : markdownRendered.html
-        const outline = contentJson ? [] : markdownRendered.outline
-        const frontTags = Array.isArray(data.tags) ? data.tags : []
-        const inlineTags = extractInlineTags(content)
-        const tags = uniqueTags([...frontTags, ...inlineTags])
-        const type = data.type || 'note'
-        const isJournal = type === 'journal'
-        const isBrief = type === 'brief'
-
-        return {
-          path: `firestore:${type}/${snap.id}`,
-          slug: `${type} / ${title}`,
-          title,
-          created,
-          updated,
-          content,
-          contentJson,
-          html,
-          outline,
-          tags,
-          rawTags: frontTags,
-          isJournal,
-          isBrief,
-          isDraft: Boolean(data.isDraft),
-          source: 'firestore',
-          id: snap.id,
-        }
-      })
       setFirestoreDocs(nextDocs)
     })
   }, [user])
@@ -154,23 +135,8 @@ export default function App() {
       return undefined
     }
 
-    const listsQuery = fsQuery(collection(db, 'lists'), orderBy('updatedAt', 'desc'))
-    return onSnapshot(listsQuery, (snapshot) => {
+    return subscribeToLists((nextLists) => {
       setListsReady(true)
-      const nextLists = snapshot.docs.map((snap) => {
-        const data = snap.data() || {}
-        const items = Array.isArray(data.items) ? data.items : []
-        const created = formatDate(data.createdAt?.toDate?.() || data.createdAt)
-        const updated = formatDate(data.updatedAt?.toDate?.() || data.updatedAt)
-        return {
-          id: snap.id,
-          title: data.title || 'Untitled List',
-          items,
-          created,
-          updated,
-          source: 'firestore',
-        }
-      })
       setFirestoreLists(nextLists)
     })
   }, [user])
@@ -186,17 +152,7 @@ export default function App() {
 
   const createDocument = async (type, { title, tags = [] } = {}) => {
     if (!user) return
-    const docTitle = title || 'Untitled'
-    const docRef = await addDoc(collection(db, 'notes'), {
-      title: docTitle,
-      content: '',
-      contentJson: { type: 'doc', content: [{ type: 'paragraph' }] },
-      tags,
-      type,
-      isDraft: true,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    })
+    const docRef = await createDocRecord(type, { title: title || 'Untitled', tags })
     setAutoEditDocId(docRef.id)
     setActivePath(`firestore:${type}/${docRef.id}`)
     setActiveListId(null)
@@ -212,14 +168,7 @@ export default function App() {
 
   const handleUpdateNoteInline = async (docItem, { title, content, contentJson, tags }) => {
     if (!docItem?.id) return
-    await updateDoc(doc(db, 'notes', docItem.id), {
-      title: title?.trim() || 'Untitled',
-      content: content || '',
-      contentJson: contentJson || null,
-      tags: Array.isArray(tags) ? tags : [],
-      updatedAt: serverTimestamp(),
-      isDraft: false,
-    })
+    await updateDocRecord(docItem.id, { title, content, contentJson, tags })
     if (autoEditDocId === docItem.id) {
       setAutoEditDocId(null)
     }
@@ -227,7 +176,7 @@ export default function App() {
 
   const handleDeleteNoteInline = async (docItem) => {
     if (!docItem?.id) return
-    await deleteDoc(doc(db, 'notes', docItem.id))
+    await deleteDocRecord(docItem.id)
     setActivePath(null)
     setActiveListId(null)
   }
@@ -237,12 +186,7 @@ export default function App() {
     const title = listTitle.trim() || 'Untitled List'
     setListSaving(true)
     try {
-      const docRef = await addDoc(collection(db, 'lists'), {
-        title,
-        items: [],
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      })
+      const docRef = await createListRecord(title)
       setShowListModal(false)
       setListTitle('')
       setActiveListId(docRef.id)
@@ -252,38 +196,19 @@ export default function App() {
   }
 
   const updateListItems = async (listId, items) => {
-    await updateDoc(doc(db, 'lists', listId), {
-      items,
-      updatedAt: serverTimestamp(),
-    })
+    await updateListItemsRecord(listId, items)
   }
 
   const handleRenameList = async (nextTitle) => {
     if (!activeListId) return
-    await updateDoc(doc(db, 'lists', activeListId), {
-      title: nextTitle,
-      updatedAt: serverTimestamp(),
-    })
+    await updateListRecord(activeListId, { title: nextTitle })
   }
 
   const handleAddListItem = async (text) => {
     if (!activeListId || !text) return
     const list = firestoreLists.find((item) => item.id === activeListId)
     if (!list) return
-    const items = list.items || []
-    const incomplete = items.filter((item) => !item.completed)
-    const completed = items.filter((item) => item.completed)
-    const nextItems = [
-      {
-        id: createId(),
-        text,
-        completed: false,
-        createdAt: Date.now(),
-      },
-      ...incomplete,
-      ...completed,
-    ]
-    await updateListItems(activeListId, nextItems)
+    await updateListItems(activeListId, addListItem(list.items || [], text))
   }
 
   const runCompleteAnimation = (itemId) => new Promise((resolve) => {
@@ -313,19 +238,12 @@ export default function App() {
   const handleToggleListItem = async (listId, itemId) => {
     const list = firestoreLists.find((item) => item.id === listId)
     if (!list) return
-    const items = list.items || []
-    const target = items.find((item) => item.id === itemId)
-    if (!target) return
-    const remaining = items.filter((item) => item.id !== itemId)
-    const remainingIncomplete = remaining.filter((item) => !item.completed)
-    const remainingCompleted = remaining.filter((item) => item.completed)
-    const updated = { ...target, completed: !target.completed }
-    if (updated.completed) {
+    const result = toggleListItem(list.items || [], itemId)
+    if (!result) return
+    const { nextItems, updatedItem } = result
+    if (updatedItem.completed) {
       await runCompleteAnimation(itemId)
     }
-    const nextItems = updated.completed
-      ? [...remainingIncomplete, ...remainingCompleted, updated]
-      : [updated, ...remainingIncomplete, ...remainingCompleted]
     await updateListItems(listId, nextItems)
   }
 
@@ -335,23 +253,19 @@ export default function App() {
     if (!list) return
     const trimmed = nextText.trim()
     if (!trimmed) return
-    const nextItems = (list.items || []).map((item) => (
-      item.id === itemId ? { ...item, text: trimmed } : item
-    ))
-    await updateListItems(listId, nextItems)
+    await updateListItems(listId, editListItem(list.items || [], itemId, trimmed))
   }
 
   const handleDeleteListItem = async (listId, itemId) => {
     const list = firestoreLists.find((item) => item.id === listId)
     if (!list) return
-    const nextItems = (list.items || []).filter((item) => item.id !== itemId)
-    await updateListItems(listId, nextItems)
+    await updateListItems(listId, removeListItem(list.items || [], itemId))
   }
 
 
   const handleDiscardNewDocInline = async (docItem) => {
     if (!docItem?.id) return
-    await deleteDoc(doc(db, 'notes', docItem.id))
+    await deleteDocRecord(docItem.id)
     if (autoEditDocId === docItem.id) setAutoEditDocId(null)
     setActivePath(null)
     setActiveListId(null)
@@ -369,7 +283,7 @@ export default function App() {
 
   const handleDeleteList = async () => {
     if (!activeListId || !activeList) return
-    await deleteDoc(doc(db, 'lists', activeListId))
+    await deleteListRecord(activeListId)
     setActiveListId(null)
   }
 
@@ -394,127 +308,33 @@ export default function App() {
     if (!activeListId) return
     const list = firestoreLists.find((item) => item.id === activeListId)
     if (!list) return
-    const items = list.items || []
-    const incomplete = items.filter((item) => !item.completed)
-    const completed = items.filter((item) => item.completed)
-    const oldIndex = incomplete.findIndex((item) => item.id === active.id)
-    const newIndex = incomplete.findIndex((item) => item.id === over.id)
-    if (oldIndex === -1 || newIndex === -1) return
-    const nextIncomplete = arrayMove(incomplete, oldIndex, newIndex)
-    await updateListItems(activeListId, [...nextIncomplete, ...completed])
+    const nextItems = reorderListItems(list.items || [], active.id, over.id)
+    if (!nextItems) return
+    await updateListItems(activeListId, nextItems)
   }
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return docs
-    return docs.filter((doc) => {
-      const haystack = `${doc.title} ${doc.slug} ${doc.content} ${(doc.tags || []).join(' ')}`.toLowerCase()
-      return haystack.includes(q)
-    })
-  }, [docs, query])
+  const filtered = useMemo(() => filterDocs(docs, query), [docs, query])
 
-  const filteredLists = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return firestoreLists
-    return firestoreLists.filter((list) => {
-      const itemText = (list.items || []).map((item) => item.text).join(' ')
-      const haystack = `${list.title} ${itemText}`.toLowerCase()
-      return haystack.includes(q)
-    })
-  }, [firestoreLists, query])
+  const filteredLists = useMemo(() => filterLists(firestoreLists, query), [firestoreLists, query])
 
-  const activeDoc = useMemo(
-    () => (activeListId ? null : filtered.find((doc) => doc.path === activePath) || filtered[0]),
-    [activeListId, filtered, activePath],
-  )
-  const activeList = useMemo(
-    () => firestoreLists.find((list) => list.id === activeListId) || null,
-    [firestoreLists, activeListId],
-  )
+  const activeDoc = useMemo(() => getActiveDoc(filtered, activePath, activeListId), [filtered, activePath, activeListId])
+  const activeList = useMemo(() => getActiveList(firestoreLists, activeListId), [firestoreLists, activeListId])
 
-  const listStats = useMemo(() => {
-    if (!activeList) return null
-    const total = activeList.items?.length || 0
-    const completed = activeList.items?.filter((item) => item.completed).length || 0
-    return { total, completed }
-  }, [activeList])
+  const listStats = useMemo(() => getListStats(activeList), [activeList])
 
   const outline = activeDoc?.outline || []
 
-  const backlinks = useMemo(() => {
-    if (!activeDoc) return []
-    const needle = activeDoc.title?.toLowerCase()
-    if (!needle) return []
-    return docs.filter((doc) => {
-      if (doc.path === activeDoc.path) return false
-      return doc.content.toLowerCase().includes(needle)
-    })
-  }, [docs, activeDoc])
+  const backlinks = useMemo(() => getBacklinks(docs, activeDoc), [docs, activeDoc])
 
-  const snippetMap = useMemo(() => {
-    if (!activeDoc?.title) return new Map()
-    const map = new Map()
-    backlinks.forEach((doc) => {
-      map.set(doc.path, buildSnippet(doc.content, activeDoc.title))
-    })
-    return map
-  }, [backlinks, activeDoc])
+  const snippetMap = useMemo(() => buildSnippetMap(backlinks, activeDoc), [backlinks, activeDoc])
 
-  const docStats = useMemo(() => {
-    if (!activeDoc) return { words: 0, minutes: 0 }
-    const words = activeDoc.content.split(/\s+/).filter(Boolean).length
-    const minutes = Math.max(1, Math.round(words / 200))
-    return { words, minutes }
-  }, [activeDoc])
+  const docStats = useMemo(() => getDocStats(activeDoc), [activeDoc])
 
-  const briefGreeting = useMemo(() => {
-    if (!activeDoc?.isBrief) return null
-    const dateStr = activeDoc.created || ''
-    const date = dateStr ? new Date(`${dateStr}T00:00:00`) : new Date()
-    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' })
-    const variants = [
-      `Good morning, dFree — Happy ${weekday}.`,
-      `Rise and shine, dFree. Happy ${weekday}!`,
-      `Morning, dFree. Let’s win this ${weekday}.`,
-      `Hey dFree — fresh ${weekday}, fresh brief.`,
-    ]
-    const index = date.getDate() % variants.length
-    return variants[index]
-  }, [activeDoc])
+  const briefGreeting = useMemo(() => buildBriefGreeting(activeDoc), [activeDoc])
 
-  const relatedDocs = useMemo(() => {
-    if (!activeDoc?.tags?.length) return []
-    const activeTags = new Set(activeDoc.tags.map((tag) => tag.toLowerCase()))
-    return docs
-      .filter((doc) => doc.path !== activeDoc.path)
-      .map((doc) => {
-        const overlap = doc.tags.filter((tag) => activeTags.has(tag.toLowerCase()))
-        return { doc, score: overlap.length, overlap }
-      })
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5)
-  }, [docs, activeDoc])
+  const relatedDocs = useMemo(() => getRelatedDocs(docs, activeDoc), [docs, activeDoc])
 
-  const briefCompare = useMemo(() => {
-    if (!activeDoc?.isBrief) return null
-    const briefDocs = docs
-      .filter((doc) => doc.isBrief && doc.created)
-      .sort((a, b) => a.created.localeCompare(b.created))
-
-    const index = briefDocs.findIndex((item) => item.path === activeDoc.path)
-    if (index <= 0) return null
-
-    const today = briefDocs[index]
-    const yesterday = briefDocs[index - 1]
-
-    return {
-      today,
-      yesterday,
-      todayMarkets: parseBriefMarkets(today.content),
-      yesterdayMarkets: parseBriefMarkets(yesterday.content),
-    }
-  }, [docs, activeDoc])
+  const briefCompare = useMemo(() => getBriefCompare(docs, activeDoc), [docs, activeDoc])
 
   useEffect(() => {
     if (activeListId) return
@@ -522,16 +342,7 @@ export default function App() {
       setActivePath(filtered[0].path)
     }
   }, [filtered, activePath, activeListId])
-
-
-  const grouped = useMemo(() => {
-    const excludedNoteTitles = new Set(['Brief Archive', 'The Dock Docs'])
-    const journals = filtered.filter((doc) => doc.isJournal)
-    const briefs = filtered.filter((doc) => doc.isBrief)
-    const notes = filtered.filter((doc) => !doc.isJournal && !doc.isBrief)
-      .filter((doc) => !excludedNoteTitles.has(doc.title))
-    return { journals, briefs, notes }
-  }, [filtered])
+  const grouped = useMemo(() => groupDocs(filtered), [filtered])
 
   const totalCount = docs.length + firestoreLists.length
   const filteredCount = filtered.length + filteredLists.length
@@ -648,7 +459,6 @@ export default function App() {
         user={user}
         autoEditDocId={autoEditDocId}
         onSaveDoc={handleUpdateNoteInline}
-        onDiscardNewDoc={handleDiscardNewDocInline}
         onRequestDiscardNewDoc={requestDiscardNewDoc}
         onDeleteDoc={(docItem) => openConfirmDialog({
           title: docItem?.isBrief ? 'Delete brief?' : 'Delete note?',

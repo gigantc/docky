@@ -8,7 +8,6 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "docky:write": "node scripts/docky-write.js",
     "docky:cli": "node scripts/docky-cli.js"
   },
   "dependencies": {

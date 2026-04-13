@@ -11,7 +11,6 @@ export default function Viewer({
   user,
   autoEditDocId,
   onSaveDoc,
-  onDiscardNewDoc,
   onRequestDiscardNewDoc,
   onDeleteDoc,
   onAddListItem,
@@ -32,6 +31,7 @@ export default function Viewer({
     return (
       <main ref={viewerRef} className="viewer">
         <ListView
+          key={activeList.id}
           activeList={activeList}
           listStats={listStats}
           onAddItem={onAddListItem}
@@ -50,11 +50,11 @@ export default function Viewer({
     return (
       <main ref={viewerRef} className="viewer">
         <DocumentView
+          key={activeDoc.path}
           activeDoc={activeDoc}
           briefGreeting={briefGreeting}
           user={user}
           onSave={onSaveDoc}
-          onDiscardNew={onDiscardNewDoc}
           onRequestDiscardNew={onRequestDiscardNewDoc}
           onDelete={onDeleteDoc}
           autoStartEdit={autoEditDocId === activeDoc?.id}
