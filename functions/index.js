@@ -3,6 +3,31 @@ const admin = require('firebase-admin')
 const express = require('express')
 const cors = require('cors')
 
+const BRIEF_RETENTION_DAYS = 8
+const MANUAL_PRUNE_KEY = process.env.MANUAL_PRUNE_KEY || ''
+
+async function pruneOldBriefDocs() {
+  const cutoff = new Date(Date.now() - BRIEF_RETENTION_DAYS * 24 * 60 * 60 * 1000)
+
+  const snapshot = await db
+    .collection('notes')
+    .where('type', '==', 'brief')
+    .where('createdAt', '<', cutoff)
+    .get()
+
+  if (snapshot.empty) {
+    console.log('Brief retention: no old briefs to prune.')
+    return { deleted: 0 }
+  }
+
+  const batch = db.batch()
+  snapshot.docs.forEach((doc) => batch.delete(doc.ref))
+  await batch.commit()
+
+  console.log(`Brief retention: deleted ${snapshot.size} brief(s) older than ${BRIEF_RETENTION_DAYS} days.`)
+  return { deleted: snapshot.size }
+}
+
 admin.initializeApp()
 const db = admin.firestore()
 
@@ -156,4 +181,26 @@ app.delete('/api/items/:id', async (req, res) => {
   }
 })
 
+app.post('/api/admin/prune-briefs', async (req, res) => {
+  const providedKey = req.headers['x-prune-key']
+  if (!MANUAL_PRUNE_KEY || providedKey !== MANUAL_PRUNE_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  try {
+    const result = await pruneOldBriefDocs()
+    return res.json({ ok: true, ...result })
+  } catch (err) {
+    return res.status(500).json({ error: err.message })
+  }
+})
+
 exports.api = functions.https.onRequest(app)
+
+exports.pruneOldBriefs = functions.pubsub
+  .schedule('every 24 hours')
+  .timeZone('America/Phoenix')
+  .onRun(async () => {
+    await pruneOldBriefDocs()
+    return null
+  })
