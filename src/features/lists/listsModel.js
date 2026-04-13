@@ -1,6 +1,6 @@
 import { arrayMove } from '@dnd-kit/sortable'
-import { formatDate } from '../../utils/date'
-import { createId } from '../../utils/helpers'
+import { formatDate } from '../../shared/lib/date'
+import { createId } from '../../shared/lib/helpers'
 
 export function mapFirestoreListSnapshot(snapshot) {
   const data = snapshot.data() || {}

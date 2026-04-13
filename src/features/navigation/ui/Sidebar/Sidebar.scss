@@ -1,0 +1,126 @@
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+
+.sidebar {
+  grid-area: sidebar;
+  @include m.surface-tint(1);
+  border-right: 1px solid rgba(v.$white, 0.06);
+  padding: 10px 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 34px;
+  gap: 8px;
+}
+
+.sidebar__actions {
+  display: flex;
+  gap: 8px;
+  transition: gap v.$transition-fast;
+}
+
+.sidebar__actions--row {
+  flex-direction: row;
+}
+
+.sidebar__actions--col {
+  flex-direction: column;
+}
+
+.sidebar__action-btn,
+.sidebar__toggle {
+  @include m.icon-button;
+  flex: 0 0 34px;
+}
+
+.sidebar__action-btn--primary {
+  color: v.$white;
+}
+
+.sidebar__toggle {
+  border: 1px solid rgba(v.$white, 0.18);
+  background: rgba(v.$white, 0.03);
+  overflow: hidden;
+  transition: margin 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.sidebar__toggle-icon {
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.85) rotate(-8deg);
+  transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1),
+              transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.sidebar__toggle-icon.is-visible {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.sidebar__content {
+  min-height: 0;
+  width: calc(var(--sidebar-panel-width) - 20px);
+  max-width: calc(var(--sidebar-panel-width) - 20px);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  will-change: transform, opacity;
+}
+
+.sidebar--collapsed {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.sidebar--collapsed .sidebar__top {
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar--collapsed .sidebar__toggle {
+  order: -1;
+}
+
+.sidebar--collapsed .sidebar__actions {
+  align-items: center;
+}
+
+.sidebar--collapsed .sidebar__content {
+  pointer-events: none;
+}
+
+.sidebar__search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 0 10px 0;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 42px;
+    min-width: 42px;
+  }
+
+  .sidebar--open {
+    width: var(--sidebar-panel-width);
+  }
+
+  .sidebar--collapsed {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+}

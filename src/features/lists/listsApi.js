@@ -9,7 +9,7 @@ import {
   orderBy,
   fsQuery,
   serverTimestamp,
-} from '../../firebase'
+} from '../../lib/firebase'
 import { mapFirestoreListSnapshot } from './listsModel'
 
 export function subscribeToLists(onData) {

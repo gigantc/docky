@@ -32,7 +32,7 @@ The current frontend runtime uses Firestore only:
 1. `notes` for notes, journals, and briefs
 2. `lists` for checklists
 
-Both are subscribed via `onSnapshot` listeners in `src/App.jsx`.
+Both are subscribed via `onSnapshot` listeners in `src/app/App.jsx`.
 
 `docs/` still exists in the repo, but as reference/spec content rather than an active frontend import path.
 
@@ -54,31 +54,28 @@ Do not remove or repurpose Cloud Functions code without checking whether assista
 
 ### Key files
 
-- `src/App.jsx` - Main component. State management, Firestore subscriptions, event handlers, search, and keyboard navigation. Delegates rendering to extracted components. Includes loading gate (`authReady`, `docsReady`, `listsReady`) that shows a splash loader until auth + data are resolved.
-- `src/firebase.js` - Firebase init and re-exports of auth/firestore SDK methods. All Firestore imports come through here.
-- `src/App.scss` - CSS Grid layout and shared app styling.
+- `src/app/App.jsx` - Main app shell. State management, Firestore subscriptions, event handlers, search, and keyboard navigation. Includes loading gate (`authReady`, `docsReady`, `listsReady`) and delegates rendering to feature UI.
+- `src/lib/firebase.js` - Firebase init and re-exports of auth/firestore SDK methods. All Firestore imports come through here.
+- `src/app/App.scss` - App shell layout and shared styling.
 - `src/styles/_variables.scss` - Design tokens.
 - `src/styles/_mixins.scss` - Reusable mixins.
 - `src/styles/_base.scss` - Reset, body defaults, `.tag`, and `.highlight` base classes.
-- `src/utils/richText.js` - Shared TipTap extension config and markdown-to-HTML/rich-doc-to-HTML conversion.
+- `src/shared/lib/richText.js` - Shared TipTap extension config and markdown-to-HTML/rich-doc-to-HTML conversion.
+- `src/features/docs/docsModel.js` - Doc mapping and selectors.
+- `src/features/lists/listsModel.js` - List mapping and mutation helpers.
 - `scripts/docky-cli.js` - Node CLI for Firestore CRUD against frontend-visible data.
 - `functions/index.js` - Assistant/integration HTTP API and scheduled brief retention job. Not currently called by the frontend.
 
-### Component structure
+### Frontend structure
 
-- `AppHeader/` - Top header bar
-- `Sidebar/` - Left sidebar with collapsible rail and action buttons
-- `Viewer/` - Main content area wrapping `DocumentView` and `ListView`
-- `DocumentView/` - Inline rich-text editing and reading for notes, journals, and briefs
-- `ListView/` - Checklist view with inline item editing and drag-and-drop reorder
-- `ListView/SortableListItem` - Individual draggable list item
-- `Rightbar/` - Right sidebar with `Outline`, `Metadata`, `Related`, `Backlinks`, `BriefCompare`, and `ListStats`
-- `DocList/` - Document list rendering (`DocListSection`, `DocListItem`)
-- `SearchBar/` - Search input
-- `NewListModal/` - Modal for creating new lists
-- `Tooltip/` - Portal-based tooltip using document event delegation on `[data-tooltip]` elements
-- `ConfirmDialog/` - Themed confirmation dialog
-- `Auth/` and `LoginPage/` - Authentication UI
+- `src/app/` - App shell and top-level layout
+- `src/features/auth/` - Authentication UI
+- `src/features/docs/` - Doc mapping and derived state
+- `src/features/lists/` - List mapping, mutations, and list UI
+- `src/features/navigation/ui/` - Sidebar, search, and document list UI
+- `src/features/workspace/ui/` - Viewer, document view, and rightbar UI
+- `src/shared/ui/` - Shared UI primitives like `ConfirmDialog` and `Tooltip`
+- `src/shared/lib/` - Shared formatting, markdown, string, tag, and rich text helpers
 
 ### Firestore schema
 
@@ -118,7 +115,7 @@ Briefs are rendered read-only in the frontend.
 
 The app is SCSS-only: no inline styles, no CSS-in-JS, no Tailwind.
 
-Current implementation note: the account menu exposes multiple theme accents. If you change styling guidance, keep it aligned with `src/components/Auth/Auth.jsx` and the active theme token system rather than assuming a single hard-coded green theme.
+Current implementation note: the account menu exposes multiple theme accents. If you change styling guidance, keep it aligned with `src/features/auth/ui/Auth/Auth.jsx` and the active theme token system rather than assuming a single hard-coded green theme.
 
 ## Environment
 

@@ -1,0 +1,90 @@
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+
+.rightbar {
+  grid-area: rightbar;
+  @include m.surface-tint(1);
+  padding: 22px 18px;
+  color: v.$muted;
+  font-size: v.$fs-base;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.rightbar__content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rightbar__section {
+  margin-bottom: 18px;
+  padding: 14px;
+  border-radius: v.$radius-m;
+  @include m.surface-tint(2);
+  border: 1px solid rgba(v.$white, 0.06);
+}
+
+.rightbar__title {
+  color: v.$white;
+  font-size: v.$fs-base;
+  margin-bottom: 8px;
+  font-weight: v.$fw-bold;
+}
+
+.rightbar__item {
+  margin-bottom: 6px;
+}
+
+.rightbar__item--indent-2 {
+  padding-left: 8px;
+}
+
+.rightbar__item--indent-3 {
+  padding-left: 16px;
+}
+
+.rightbar__backlink {
+  margin-bottom: 10px;
+}
+
+.rightbar__link,
+.rightbar__outline {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  background: none;
+  border: none;
+  border-radius: v.$radius-s;
+  color: v.$white;
+  cursor: pointer;
+  transition: v.$transition-fast;
+  outline: none;
+  font-weight: v.$fw-medium;
+  @include m.state-layer;
+  @include m.focus-ring;
+
+}
+
+.rightbar__outline {
+  padding: 4px 6px;
+
+  &.is-active {
+    background: rgba(var(--accent-light-rgb), 0.14);
+  }
+}
+
+.rightbar__snippet {
+  color: v.$muted;
+  font-size: v.$fs-sm;
+  line-height: 1.4;
+  padding: 0 8px;
+}
+
+.rightbar__snippet strong {
+  color: v.$white;
+  font-weight: v.$fw-semi;
+}

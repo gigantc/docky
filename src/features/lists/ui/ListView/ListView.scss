@@ -1,0 +1,254 @@
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+
+.list {
+  max-width: calc(720px + 88px);
+  margin: 0 auto;
+}
+
+.list__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 36px 44px 28px;
+  background: linear-gradient(180deg, rgba(v.$black, 0.97), rgba(v.$black, 0.88));
+  backdrop-filter: blur(4px);
+}
+
+.list__header h1 {
+  margin: 0 0 6px;
+  font-size: var(--type-h1);
+  font-weight: v.$fw-bold;
+  letter-spacing: 0.01em;
+}
+
+.list__title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.list__title-input {
+  @include m.input-underline;
+  margin: 0 0 6px;
+  font-size: var(--type-h1);
+  font-weight: v.$fw-bold;
+  letter-spacing: 0.01em;
+}
+
+.list__panel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.list__icon {
+  @include m.icon-button;
+}
+
+.list__meta {
+  color: v.$muted;
+  font-size: v.$fs-sm;
+}
+
+.list__composer {
+  display: flex;
+  gap: 10px;
+  flex: 1 0 100%;
+  margin-top: 10px;
+}
+
+.list__input {
+  @include m.input-underline;
+  flex: 1;
+}
+
+
+.list__items {
+  list-style: none;
+  margin: 0;
+  padding: 0 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.list-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  @include m.surface-tint(1);
+  border: 1px solid rgba(v.$white, 0.06);
+  border-radius: v.$radius-m;
+  overflow: hidden;
+  transition: background v.$transition-normal, border-color v.$transition-normal, box-shadow v.$transition-normal, opacity v.$transition-normal, filter v.$transition-normal;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.list-item__swipe {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(var(--accent-rgb), 0.3) 35%, rgba(var(--accent-rgb), 0.55) 50%, rgba(var(--accent-rgb), 0.3) 65%, transparent 100%);
+  pointer-events: none;
+  transform: translateX(-120%);
+  opacity: 0;
+  z-index: 0;
+}
+
+.list-item > * {
+  position: relative;
+  z-index: 1;
+}
+
+.list-item--sortable {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.list-item.is-dragging {
+  opacity: 0.25;
+  filter: grayscale(40%);
+}
+
+.list-item.is-complete {
+  background: rgba(v.$white, 0.02);
+  border-color: rgba(v.$white, 0.03);
+}
+
+.list-item.is-complete .list-item__text {
+  text-decoration: line-through;
+  opacity: 0.4;
+}
+
+.list-item__edit-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.list-item__edit-input {
+  flex: 1;
+  min-width: 120px;
+  @include m.input-field;
+  padding: 8px 10px;
+}
+
+.list-item__action {
+  background: none;
+  border: none;
+  color: v.$muted;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  @include m.state-layer;
+
+  &:hover {
+    color: v.$white;
+  }
+}
+
+.list-item__delete {
+  @extend .list-item__action;
+  opacity: 0.5;
+}
+
+.list-item.is-completing .list-item__checkbox,
+.list-item.is-complete .list-item__checkbox {
+  background: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.6);
+}
+
+.list-item.is-completing .list-item__check,
+.list-item.is-complete .list-item__check {
+  transform: rotate(45deg) scale(1);
+}
+
+.list-item__checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 2px solid rgba(v.$white, 0.18);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: v.$transition-fast;
+
+  @include m.focus-ring;
+}
+
+.list-item__check {
+  width: 6px;
+  height: 10px;
+  border-right: 2px solid v.$white;
+  border-bottom: 2px solid v.$white;
+  transform: rotate(45deg) scale(0);
+  margin-bottom: 2px;
+  transition: transform v.$transition-fast;
+}
+
+.list-item__text {
+  flex: 1;
+  font-size: v.$fs-base;
+}
+
+.list-item--empty {
+  background: transparent;
+  border: 1px dashed rgba(v.$white, 0.1);
+  color: v.$muted;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .list__header {
+    flex-direction: column;
+    gap: 8px;
+    padding: 15px 15px 28px;
+  }
+
+  .list__items {
+    padding: 0 15px;
+  }
+
+  .list__panel {
+    order: -1;
+    margin-left: 0;
+  }
+
+  .list__composer {
+    width: 100%;
+  }
+
+  .list__meta {
+    font-size: var(--type-meta);
+  }
+
+  .list-item {
+    padding: 10px 10px;
+  }
+
+  .list-item__text {
+    font-size: var(--type-body);
+    line-height: var(--lh-body);
+  }
+}

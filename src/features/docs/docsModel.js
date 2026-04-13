@@ -1,8 +1,8 @@
-import { extractInlineTags, uniqueTags } from '../../utils/tags'
-import { buildSnippet } from '../../utils/string.jsx'
-import { renderMarkdownWithOutline, parseBriefMarkets } from '../../utils/markdown'
-import { richDocToHtml } from '../../utils/richText'
-import { formatDate } from '../../utils/date'
+import { extractInlineTags, uniqueTags } from '../../shared/lib/tags'
+import { buildSnippet } from '../../shared/lib/string.jsx'
+import { renderMarkdownWithOutline, parseBriefMarkets } from '../../shared/lib/markdown'
+import { richDocToHtml } from '../../shared/lib/richText'
+import { formatDate } from '../../shared/lib/date'
 
 export function mapFirestoreDocSnapshot(snapshot) {
   const data = snapshot.data() || {}

@@ -1,0 +1,58 @@
+@use '../../../styles/variables' as v;
+@use '../../../styles/mixins' as m;
+
+.app-header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: nowrap;
+  padding: 12px 20px;
+  @include m.surface-tint(2);
+  border-bottom: 1px solid rgba(v.$white, 0.06);
+  box-shadow: v.$elevation-1;
+}
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand__title {
+  font-size: v.$fs-lg;
+  font-weight: v.$fw-semi;
+  letter-spacing: 0.01em;
+}
+
+.brand__subtitle {
+  color: v.$muted;
+  font-size: v.$fs-sm;
+  font-weight: v.$fw-light;
+}
+
+@media (max-width: 900px) {
+  .app-header {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+
+  .brand__title {
+    font-size: 18px;
+  }
+
+  .brand__subtitle {
+    display: none;
+  }
+}

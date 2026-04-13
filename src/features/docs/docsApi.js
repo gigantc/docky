@@ -9,7 +9,7 @@ import {
   orderBy,
   fsQuery,
   serverTimestamp,
-} from '../../firebase'
+} from '../../lib/firebase'
 import { mapFirestoreDocSnapshot } from './docsModel'
 
 export function subscribeToDocs(onData) {

@@ -1,0 +1,121 @@
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+
+.doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-right: 6px;
+  flex: 1;
+}
+
+.doc-list__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.doc-list__heading {
+  font-size: v.$fs-sm;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: v.$white;
+  padding: 8px 10px;
+  font-weight: v.$fw-semi-bold;
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.9), rgba(var(--accent-rgb), 0.82));
+  border-radius: v.$radius-m;
+  box-shadow: v.$elevation-1;
+}
+
+.doc-list__heading--toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  transition: v.$transition-normal;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+
+  @include m.focus-ring;
+}
+
+.doc-list__chevron {
+  display: inline-block;
+  font-size: v.$fs-base;
+  transform: rotate(-90deg);
+  transition: transform v.$transition-fast;
+
+  &.is-open {
+    transform: rotate(0deg);
+  }
+}
+
+.doc-list__content {
+  overflow: hidden;
+  width: 100%;
+}
+
+.doc-list__item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: v.$radius-m;
+  color: v.$white;
+  cursor: pointer;
+  transition: v.$transition-normal;
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+  @include m.state-layer;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  &.is-active {
+    background: rgba(var(--accent-light-rgb), 0.14);
+    border: 1px solid rgba(var(--accent-light-rgb), 0.25);
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+.doc-list__title {
+  font-weight: v.$fw-medium;
+  font-size: v.$fs-base;
+}
+
+.doc-list__meta {
+  color: v.$muted;
+  font-size: v.$fs-sm;
+  margin-top: 4px;
+}
+
+.doc-list__empty {
+  color: v.$muted;
+  padding: 12px;
+}
+
+@media (max-width: 900px) {
+  .doc-list__heading {
+    font-size: var(--type-meta);
+    letter-spacing: 0.1em;
+  }
+
+  .doc-list__title {
+    font-size: var(--type-body);
+  }
+
+  .doc-list__meta {
+    font-size: var(--type-meta);
+  }
+}

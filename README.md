@@ -39,7 +39,7 @@ The current frontend runtime reads from Firestore only:
 - `notes` for notes, journals, and briefs
 - `lists` for checklists
 
-Both collections are subscribed to with real-time listeners in `src/App.jsx`.
+Both collections are subscribed to with real-time listeners in `src/app/App.jsx`.
 
 ## Data model
 
@@ -54,34 +54,26 @@ Notes and journals can be stored either as plain `content` text or as TipTap `co
 
 ```text
 src/
-  App.jsx                  # Main app state, Firestore subscriptions, derived view data
-  App.scss                 # Shared layout and modal styling
-  firebase.js              # Firebase init + auth/firestore re-exports
+  app/
+    App.jsx                # Main app state, Firestore subscriptions, derived view data
+    App.scss               # Shared layout and modal styling
+    layout/
+      AppHeader/           # Header shell and account controls
+  features/
+    auth/ui/               # Login and account menu UI
+    docs/                  # Doc selectors and Firestore mapping
+    lists/                 # List selectors, mutations, and list UI
+    navigation/ui/         # Sidebar, search, and document list UI
+    workspace/ui/          # Viewer, document view, rightbar UI
+  shared/
+    lib/                   # Shared formatting, markdown, tags, rich text helpers
+    ui/                    # Shared UI primitives like dialogs and tooltips
+  lib/
+    firebase.js            # Firebase init + auth/firestore re-exports
   styles/
     _variables.scss        # Design tokens
     _mixins.scss           # Shared styling mixins
     _base.scss             # Base/reset styles
-  components/
-    AppHeader/             # Header and account controls
-    Auth/                  # User menu and theme switching
-    LoginPage/             # Sign-in screen
-    Sidebar/               # Search and navigation rail
-    SearchBar/             # Search input
-    DocList/               # Notes/lists/journals/briefs listing
-    Viewer/                # Main content switcher
-    DocumentView/          # TipTap-backed note/journal viewer/editor
-    ListView/              # Checklist view with drag/drop reorder
-    Rightbar/              # Outline, metadata, related docs, backlinks, brief compare
-    NewListModal/          # Create list dialog
-    ConfirmDialog/         # Shared confirm dialog
-    Tooltip/               # Global tooltip portal
-  utils/
-    date.js                # Date formatting helpers
-    helpers.js             # ID generation and sorting helpers
-    markdown.js            # Markdown rendering + brief parsing
-    richText.js            # TipTap extension config and HTML conversion
-    string.jsx             # Highlight/snippet helpers
-    tags.js                # Inline tag extraction
 scripts/
   docky-cli.js             # Direct Firestore CRUD CLI for notes/lists
   prune-briefs.js          # Manual brief-retention cleanup script

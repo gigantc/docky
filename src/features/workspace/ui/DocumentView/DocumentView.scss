@@ -1,0 +1,243 @@
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+
+.doc {
+  max-width: calc(820px + 88px);
+  margin: 0 auto;
+}
+
+.doc__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 36px 44px 18px;
+  background: linear-gradient(180deg, rgba(v.$black, 0.97), rgba(v.$black, 0.88));
+  backdrop-filter: blur(4px);
+}
+
+.doc__title {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+
+
+.doc__title-input {
+  @include m.input-underline;
+  max-width: 100%;
+  margin: 0 0 10px;
+  font-size: var(--type-h1);
+  font-weight: v.$fw-bold;
+  line-height: 1.2;
+}
+
+.doc__header h1 {
+  margin: 0 0 10px;
+  font-size: var(--type-h1);
+  font-weight: v.$fw-bold;
+  letter-spacing: 0.01em;
+}
+
+.doc__date {
+  color: v.$muted;
+  font-size: var(--type-meta);
+  margin-bottom: 8px;
+}
+
+
+.doc__kind {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-size: var(--type-meta);
+  color: var(--accent-light);
+  border: 1px solid rgba(var(--accent-light-rgb), 0.3);
+  border-radius: v.$radius-pill;
+  padding: 2px 8px;
+  margin-bottom: 8px;
+}
+
+.doc__tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.doc__panel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.doc__icon {
+  @include m.icon-button;
+
+  &.is-active {
+    background: rgba(var(--accent-light-rgb), 0.18);
+    color: var(--accent-light);
+  }
+}
+
+.doc__editor-meta {
+  flex: 1 0 100%;
+  width: 100%;
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.doc__editor-meta.is-sticky {
+  position: sticky;
+  top: 72px;
+  z-index: 4;
+  padding: 8px 0 10px;
+  background: linear-gradient(180deg, rgba(v.$black, 0.96), rgba(v.$black, 0.86));
+  backdrop-filter: blur(4px);
+}
+
+.doc__label {
+  font-size: var(--type-meta);
+  color: v.$muted;
+}
+
+.doc__input {
+  @include m.input-underline;
+}
+
+.doc__toolbar {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.doc__content {
+  margin-top: 20px;
+  padding: 0 44px;
+  color: v.$white;
+  font-size: var(--type-body);
+  line-height: var(--lh-body);
+
+  .tiptap {
+    outline: none;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .tiptap p {
+    margin: 0 0 0.85em;
+  }
+
+  .tiptap li p {
+    margin: 0;
+  }
+
+  .tiptap h1,
+  .tiptap h2,
+  .tiptap h3 {
+    margin-top: 22px;
+    margin-bottom: 10px;
+    font-weight: v.$fw-semi;
+  }
+
+  .tiptap h1 { font-size: var(--type-h1); }
+  .tiptap h2 { font-size: var(--type-h2); }
+  .tiptap h3 { font-size: var(--type-h3); }
+
+  .tiptap ul,
+  .tiptap ol {
+    padding-left: 22px;
+  }
+
+  .tiptap li {
+    margin: 0;
+  }
+
+  .tiptap a {
+    color: var(--accent-light);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(var(--accent-light-rgb), 0.4);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .tiptap code {
+    background: rgba(v.$white, 0.06);
+    border: 1px solid rgba(v.$white, 0.06);
+    padding: 2px 6px;
+    border-radius: 8px;
+  }
+
+  .tiptap pre {
+    background: rgba(v.$white, 0.04);
+    padding: 16px;
+    border-radius: v.$radius-m;
+    border: 1px solid rgba(v.$white, 0.06);
+    overflow: auto;
+  }
+}
+
+.doc__content.is-editing .tiptap {
+  border: 1px solid rgba(v.$white, 0.12);
+  border-radius: v.$radius-m;
+  padding: 12px;
+  min-height: 280px;
+  background: rgba(v.$white, 0.02);
+}
+
+@media (max-width: 900px) {
+  .doc {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .doc__header {
+    flex-direction: column;
+    gap: 8px;
+    padding: 15px 15px 18px;
+  }
+
+  .doc__content {
+    padding: 0 15px;
+  }
+
+  .doc__panel {
+    order: -1;
+    margin-left: 0;
+  }
+
+  .doc__title {
+    flex: 1 1 auto;
+  }
+
+  .doc__header,
+  .doc__editor-meta,
+  .doc__content {
+    max-width: 100%;
+  }
+
+  .doc__toolbar {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .doc__toolbar .doc__icon {
+    flex: 0 0 auto;
+  }
+
+  .doc__content.is-editing .tiptap {
+    min-height: 220px;
+  }
+
+  .doc__editor-meta.is-sticky {
+    top: 62px;
+  }
+}
