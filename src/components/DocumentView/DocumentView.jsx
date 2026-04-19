@@ -77,7 +77,7 @@ export default function DocumentView({
   }
 
   const tool = (label, action, active = false, icon = null) => (
-    <button className={`doc__icon ${active ? 'is-active' : ''}`} type="button" onClick={action} aria-label={label} data-tooltip={label}>
+    <button className={`doc__icon ${active ? 'is-active' : ''}`} type="button" onClick={action} aria-label={label}>
       {icon}
     </button>
   )

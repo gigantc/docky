@@ -1,0 +1,139 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+.settings {
+  background: v.$surface-2;
+  border: 1px solid rgba(v.$outline-variant, 0.3);
+  border-radius: v.$radius-l;
+  padding: 24px;
+  width: 440px;
+  max-width: calc(100vw - 40px);
+  box-shadow: v.$elevation-2;
+  color: v.$white;
+}
+
+.settings__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.settings__eyebrow {
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: v.$fw-bold;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.settings__title {
+  font-family: v.$font-headline;
+  font-size: 24px;
+  font-weight: v.$fw-medium;
+  margin: 4px 0 0;
+}
+
+.settings__close {
+  @include m.icon-button;
+  color: v.$muted;
+}
+
+.settings__section {
+  margin-top: 8px;
+}
+
+.settings__section-title {
+  font-size: v.$fs-xs;
+  font-weight: v.$fw-bold;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: v.$muted;
+  margin: 0 0 12px;
+}
+
+.settings__themes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.settings__theme {
+  @include m.button-reset;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: v.$surface-1;
+  border: 1px solid rgba(v.$outline-variant, 0.3);
+  border-radius: v.$radius-m;
+  color: v.$white;
+  font-size: v.$fs-sm;
+  cursor: pointer;
+  transition: background v.$transition-fast, border-color v.$transition-fast;
+
+  &:hover {
+    background: v.$surface-3;
+    border-color: rgba(var(--primary-rgb), 0.3);
+  }
+
+  &.is-active {
+    border-color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.08);
+  }
+}
+
+.settings__swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: v.$radius-pill;
+  flex-shrink: 0;
+}
+
+.settings__locations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings__location {
+  @include m.button-reset;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: v.$surface-1;
+  border: 1px solid rgba(v.$outline-variant, 0.3);
+  border-radius: v.$radius-m;
+  color: v.$white;
+  text-align: left;
+  cursor: pointer;
+  transition: background v.$transition-fast, border-color v.$transition-fast;
+
+  &:hover {
+    background: v.$surface-3;
+    border-color: rgba(var(--primary-rgb), 0.3);
+  }
+
+  &.is-active {
+    border-color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.08);
+  }
+}
+
+.settings__location-name {
+  font-size: v.$fs-sm;
+  font-weight: v.$fw-semi;
+}
+
+.settings__location-coords {
+  font-size: v.$fs-xs;
+  color: v.$muted;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.settings__section + .settings__section {
+  margin-top: 20px;
+}

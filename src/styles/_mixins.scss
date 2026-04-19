@@ -60,8 +60,8 @@
   border-radius: v.$radius-m;
   border: none;
   cursor: pointer;
-  background: v.$green-light;
-  color: v.$on-primary;
+  background: var(--primary);
+  color: var(--on-primary);
   font-family: v.$font-body;
   font-size: v.$fs-sm;
   font-weight: v.$fw-bold;
@@ -69,7 +69,7 @@
   transition: box-shadow v.$transition-normal, transform v.$transition-fast;
   @include state-layer;
 
-  &:hover { box-shadow: 0 0 18px rgba(v.$green-light, 0.3); }
+  &:hover { box-shadow: 0 0 18px rgba(var(--primary-rgb), 0.3); }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
@@ -87,7 +87,7 @@
   outline: none;
   transition: border-color v.$transition-normal;
 
-  &:focus { border-bottom-color: v.$green-light; }
+  &:focus { border-bottom-color: var(--primary); }
 }
 
 // Square icon button (toolbars, panels)
@@ -120,7 +120,7 @@
   transition: border-color v.$transition-normal, background v.$transition-normal;
 
   &:focus {
-    border-bottom-color: v.$green-light;
+    border-bottom-color: var(--primary);
     background: rgba(v.$white, 0.08);
   }
 }

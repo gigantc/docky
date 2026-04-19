@@ -1,9 +1,23 @@
-import { useMemo } from 'react'
-import { ArrowRight, BookOpen, CloudSun, FileText, ListTodo, Plus, SquareCheck, Square } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  ArrowRight, BookOpen, Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun,
+  Plus, Square, SquareCheck, Sun, Wind,
+} from 'lucide-react'
 import { buildSnippet } from '../../utils/string.jsx'
+import { conditionLabel, fetchCurrentWeather, iconKeyFor } from '../../utils/weather'
 import './Home.scss'
 
-const WEEKDAY_FMT = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+const WEATHER_ICONS = {
+  sun: Sun,
+  'cloud-sun': CloudSun,
+  cloud: Cloud,
+  'cloud-fog': CloudFog,
+  'cloud-drizzle': CloudDrizzle,
+  'cloud-rain': CloudRain,
+  'cloud-snow': CloudSnow,
+  'cloud-lightning': CloudLightning,
+  wind: Wind,
+}
 
 function formatRelative(iso) {
   if (!iso) return ''
@@ -28,7 +42,7 @@ function textFromDoc(doc) {
 export default function Home({
   docs = [],
   lists = [],
-  user,
+  location,
   onSelectDoc,
   onSelectList,
   onNewEntry,
@@ -42,19 +56,39 @@ export default function Home({
   }, [docs])
 
   const recentJournals = useMemo(() => {
-    return docs.filter((doc) => doc.isJournal).slice(0, 3)
+    return docs.filter((doc) => doc.isJournal).slice(0, 6)
   }, [docs])
 
   const activeLists = useMemo(() => {
     return lists.slice(0, 1) // featured most-recently-updated list
   }, [lists])
 
-  const heading = useMemo(() => {
-    const first = (user?.email || '').split('@')[0]
-    const name = first ? first.charAt(0).toUpperCase() + first.slice(1) : 'Friend'
-    const today = WEEKDAY_FMT.format(new Date())
-    return { name, today }
-  }, [user])
+  const [weather, setWeather] = useState(null)
+
+  useEffect(() => {
+    if (!location?.lat || !location?.lon) return
+    let cancelled = false
+    const load = () => {
+      fetchCurrentWeather({ lat: location.lat, lon: location.lon })
+        .then((data) => { if (!cancelled) setWeather(data) })
+        .catch(() => { if (!cancelled) setWeather(null) })
+    }
+    load()
+    const interval = setInterval(load, 15 * 60 * 1000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [location?.lat, location?.lon])
+
+  const WeatherIcon = useMemo(() => {
+    if (!weather) return CloudSun
+    const key = iconKeyFor(weather)
+    return WEATHER_ICONS[key] || CloudSun
+  }, [weather])
+
+  const condition = weather ? conditionLabel(weather) : '—'
+  const shortLoc = (location?.name || 'Chandler, AZ').split(',')[0]
 
   return (
     <section className="home">
@@ -64,12 +98,20 @@ export default function Home({
           <div className="home__eyebrow">Daily Intelligence</div>
           <h1 className="home__title">The Morning Brief</h1>
         </div>
-        <div className="home__meta">
-          <p className="home__meta-date">{heading.today}</p>
-          <p className="home__meta-weather">
-            <CloudSun size={14} strokeWidth={2} aria-hidden="true" />
-            <span>68°F — San Francisco</span>
-          </p>
+        <div className="home__weather">
+          <div className="home__weather-left">
+            <div className="home__weather-loc">{shortLoc}</div>
+            <div className="home__weather-temp">
+              {weather?.temperature != null ? `${weather.temperature}°` : '—°'}
+            </div>
+          </div>
+          <div className="home__weather-right">
+            <WeatherIcon size={28} strokeWidth={1.5} aria-hidden="true" />
+            <div className="home__weather-condition">{condition}</div>
+            <div className="home__weather-hilo">
+              H:{weather?.high != null ? `${weather.high}°` : '—'} L:{weather?.low != null ? `${weather.low}°` : '—'}
+            </div>
+          </div>
         </div>
       </header>
 
@@ -175,23 +217,25 @@ export default function Home({
         </div>
 
         <div className="home__bento-journals">
-          <h3>Personal Journals</h3>
-          <div className="home__journal-stack">
-            {recentJournals.length === 0 ? (
+          <h3>Journals</h3>
+          <div className="home__journal-list">
+            {recentJournals.length === 0 && (
               <div className="home__empty">No journals yet.</div>
-            ) : (
-              <button
-                type="button"
-                className="home__journal"
-                onClick={() => onSelectDoc?.(recentJournals[0].path)}
-              >
-                <BookOpen size={18} aria-hidden="true" />
-                <p className="home__journal-quote">
-                  “{textFromDoc(recentJournals[0]) || recentJournals[0].title}”
-                </p>
-                <p className="home__journal-date">Entry: {recentJournals[0].created || ''}</p>
-              </button>
             )}
+            {recentJournals.map((doc) => (
+              <button
+                key={doc.path}
+                type="button"
+                className="home__journal-item"
+                onClick={() => onSelectDoc?.(doc.path)}
+              >
+                <BookOpen size={14} strokeWidth={1.8} aria-hidden="true" />
+                <div className="home__journal-item-body">
+                  <div className="home__journal-item-title">{doc.title}</div>
+                  <div className="home__journal-item-date">{doc.created || formatRelative(doc.updated)}</div>
+                </div>
+              </button>
+            ))}
             <button
               type="button"
               className="home__journal-new"

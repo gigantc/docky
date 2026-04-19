@@ -117,19 +117,19 @@ export default function ListView({
         <div className="list__panel">
           {isEditingListTitle ? (
             <>
-              <button className="list__icon" type="button" onClick={handleRename} aria-label="Save list name" data-tooltip="Save">
+              <button className="list__icon" type="button" onClick={handleRename} aria-label="Save list name">
                 <Save aria-hidden="true" size={16} strokeWidth={2} />
               </button>
-              <button className="list__icon" type="button" onClick={() => { setIsEditingListTitle(false); setListTitleDraft(activeList.title || '') }} aria-label="Cancel rename" data-tooltip="Cancel">
+              <button className="list__icon" type="button" onClick={() => { setIsEditingListTitle(false); setListTitleDraft(activeList.title || '') }} aria-label="Cancel rename">
                 <X aria-hidden="true" size={16} strokeWidth={2} />
               </button>
             </>
           ) : (
-            <button className="list__icon" type="button" onClick={() => { setIsEditingListTitle(true); setListTitleDraft(activeList.title || '') }} aria-label="Rename list" data-tooltip="Rename list">
+            <button className="list__icon" type="button" onClick={() => { setIsEditingListTitle(true); setListTitleDraft(activeList.title || '') }} aria-label="Rename list">
               <Pencil aria-hidden="true" size={16} strokeWidth={2} />
             </button>
           )}
-          <button className="list__icon" type="button" onClick={onDeleteList} aria-label="Delete list" data-tooltip="Delete list">
+          <button className="list__icon" type="button" onClick={onDeleteList} aria-label="Delete list">
             <Trash2 aria-hidden="true" size={16} strokeWidth={2} />
           </button>
         </div>
@@ -153,7 +153,7 @@ export default function ListView({
             onClick={handleAdd}
             disabled={!newItemText.trim()}
             aria-label="Add item"
-            data-tooltip="Add item"
+           
           >
             <Plus aria-hidden="true" size={16} strokeWidth={2} />
           </button>

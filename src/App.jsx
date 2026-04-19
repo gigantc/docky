@@ -21,15 +21,16 @@ import { renderMarkdownWithOutline } from './utils/markdown'
 import { richDocToHtml } from './utils/richText'
 import { formatDate } from './utils/date'
 import { createId, sortDocs } from './utils/helpers'
+import { DEFAULT_LOCATION_ID, getLocationById } from './utils/locations'
 import NewListModal from './components/NewListModal/NewListModal'
 import NewEntryModal from './components/NewEntryModal/NewEntryModal'
+import SettingsModal from './components/SettingsModal/SettingsModal'
 import ConfirmDialog from './components/ConfirmDialog/ConfirmDialog'
 import AppHeader from './components/AppHeader/AppHeader'
 import Sidebar from './components/Sidebar/Sidebar'
 import Viewer from './components/Viewer/Viewer'
 import Home from './components/Home/Home'
 import SelectionPanel from './components/SelectionPanel/SelectionPanel'
-import Tooltip from './components/Tooltip/Tooltip'
 import LoginPage from './components/LoginPage/LoginPage'
 
 const APP_VERSION = '0.2.1'
@@ -56,10 +57,12 @@ export default function App() {
   const [listsReady, setListsReady] = useState(false)
   const [showListModal, setShowListModal] = useState(false)
   const [showNewEntry, setShowNewEntry] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [listTitle, setListTitle] = useState('')
   const [listSaving, setListSaving] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('dock.theme') || 'green')
+  const [locationId, setLocationId] = useState(() => localStorage.getItem('dock.location') || DEFAULT_LOCATION_ID)
   const [autoEditDocId, setAutoEditDocId] = useState(null)
   const appRef = useRef(null)
 
@@ -72,6 +75,10 @@ export default function App() {
     document.body.setAttribute('data-theme', theme)
     localStorage.setItem('dock.theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    localStorage.setItem('dock.location', locationId)
+  }, [locationId])
 
   useEffect(() => {
     if (!user) {
@@ -483,6 +490,16 @@ export default function App() {
         />
       )}
 
+      {showSettings && (
+        <SettingsModal
+          theme={theme}
+          onThemeChange={setTheme}
+          locationId={locationId}
+          onLocationChange={setLocationId}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
       <ConfirmDialog
         dialog={confirmDialog}
         onClose={closeConfirmDialog}
@@ -491,8 +508,6 @@ export default function App() {
 
       <AppHeader
         user={user}
-        theme={theme}
-        onThemeChange={setTheme}
         version={APP_VERSION}
         query={query}
         onQueryChange={setQuery}
@@ -502,6 +517,7 @@ export default function App() {
         view={view}
         onViewChange={handleViewChange}
         onNewEntry={() => setShowNewEntry(true)}
+        onOpenSettings={() => setShowSettings(true)}
         sidebarMode={isArchive ? 'rail' : 'full'}
       />
 
@@ -528,6 +544,7 @@ export default function App() {
           docs={filteredDocs}
           lists={filteredLists}
           user={user}
+          location={getLocationById(locationId)}
           onSelectDoc={handleSelectDoc}
           onSelectList={handleSelectList}
           onNewEntry={(type) => {
@@ -578,7 +595,6 @@ export default function App() {
         </main>
       )}
 
-      <Tooltip />
     </div>
   )
 }

@@ -15,26 +15,7 @@
 
 // Full-width sidebar (Home view)
 .sidebar--full {
-  padding: 28px 16px 20px;
-
-  .sidebar__brand { padding: 0 8px; margin-bottom: 8px; }
-
-  .sidebar__brand-title {
-    font-family: v.$font-headline;
-    font-size: 20px;
-    font-weight: v.$fw-bold;
-    color: v.$green-light;
-    line-height: 1;
-  }
-
-  .sidebar__brand-sub {
-    font-size: 10px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: v.$muted;
-    opacity: 0.7;
-    margin-top: 6px;
-  }
+  padding: 24px 16px 20px;
 
   .sidebar__nav-item,
   .sidebar__new {
@@ -49,16 +30,6 @@
 .sidebar--rail {
   padding: 24px 0;
   align-items: center;
-
-  .sidebar__brand { margin-bottom: 32px; }
-
-  .sidebar__brand-mark {
-    font-family: v.$font-headline;
-    font-size: 20px;
-    font-weight: v.$fw-bold;
-    color: v.$green-light;
-    letter-spacing: -0.02em;
-  }
 
   .sidebar__nav {
     gap: 14px;
@@ -115,10 +86,10 @@
 
   &.is-active {
     background: v.$surface-3;
-    color: v.$green-light;
-    border-left-color: v.$green-light;
+    color: var(--primary);
+    border-left-color: var(--primary);
 
-    svg { color: v.$green-light; }
+    svg { color: var(--primary); }
   }
 
   &:disabled {
@@ -129,7 +100,7 @@
 
 // Rail mode active indicator is a pill, not a left border
 .sidebar--rail .sidebar__nav-item.is-active {
-  background: rgba(v.$green-light, 0.12);
+  background: rgba(var(--primary-rgb), 0.12);
   border-left: none;
 }
 
@@ -142,14 +113,14 @@
 
 .sidebar--full .sidebar__new {
   justify-content: center;
-  background: rgba(v.$green-light, 0.08);
-  color: v.$green-light;
+  background: rgba(var(--primary-rgb), 0.08);
+  color: var(--primary);
   padding: 12px;
   font-weight: v.$fw-bold;
   margin-bottom: 12px;
   border-left: none;
 
-  &:hover { background: rgba(v.$green-light, 0.14); color: v.$green-light; }
+  &:hover { background: rgba(var(--primary-rgb), 0.14); color: var(--primary); }
 
-  svg { color: v.$green-light; }
+  svg { color: var(--primary); }
 }

@@ -5,12 +5,37 @@
   grid-area: header;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 32px;
+  gap: 32px;
+  padding: 12px 24px;
   background: v.$black;
   border-bottom: 1px solid rgba(v.$outline-variant, 0.2);
   height: 64px;
+}
+
+.app-header__brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.app-header__brand-title {
+  font-family: v.$font-headline;
+  font-size: 18px;
+  font-weight: v.$fw-bold;
+  color: var(--primary);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.app-header__brand-sub {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: v.$muted;
+  opacity: 0.7;
+  margin-top: 4px;
 }
 
 .app-header__search {
@@ -38,7 +63,7 @@
     &::placeholder { color: v.$muted; }
   }
 
-  &:focus-within { box-shadow: 0 0 0 1px rgba(v.$green-light, 0.6); }
+  &:focus-within { box-shadow: 0 0 0 1px rgba(var(--primary-rgb), 0.6); }
 }
 
 .app-header__actions {

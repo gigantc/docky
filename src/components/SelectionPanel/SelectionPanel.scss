@@ -33,8 +33,8 @@
   width: 32px;
   height: 32px;
   border-radius: v.$radius-pill;
-  background: rgba(v.$green-light, 0.12);
-  color: v.$green-light;
+  background: rgba(var(--primary-rgb), 0.12);
+  color: var(--primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -42,8 +42,8 @@
   transition: background v.$transition-fast, color v.$transition-fast;
 
   &:hover {
-    background: v.$green-light;
-    color: v.$on-primary;
+    background: var(--primary);
+    color: var(--on-primary);
   }
 }
 
@@ -72,7 +72,7 @@
     &::placeholder { color: v.$muted; opacity: 0.7; }
   }
 
-  &:focus-within { border-color: rgba(v.$green-light, 0.5); }
+  &:focus-within { border-color: rgba(var(--primary-rgb), 0.5); }
 }
 
 .panel__list {
@@ -120,9 +120,9 @@
   &.is-active {
     background: v.$surface-4;
     color: v.$white;
-    border-left-color: v.$green-light;
+    border-left-color: var(--primary);
 
-    svg { color: v.$green-light; }
+    svg { color: var(--primary); }
   }
 }
 

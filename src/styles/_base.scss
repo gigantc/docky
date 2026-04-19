@@ -2,12 +2,23 @@
 
 :root {
   color-scheme: dark;
-  --accent: #{v.$green-light};
-  --accent-light: #{v.$green-light};
-  --accent-rgb: 77, 224, 130;
-  --accent-light-rgb: 77, 224, 130;
-  --ring-soft: 0 0 0 3px rgba(var(--accent-light-rgb), 0.3);
 
+  // Primary palette — swapped per theme via body[data-theme=…]
+  --primary: #{v.$green-light};
+  --primary-rgb: 77, 224, 130;
+  --primary-container: #{v.$green};
+  --primary-container-rgb: 0, 110, 54;
+  --on-primary: #{v.$on-primary};
+  --on-primary-container: #{v.$on-primary-container};
+
+  // Legacy aliases for older components still using --accent
+  --accent: var(--primary);
+  --accent-light: var(--primary);
+  --accent-rgb: var(--primary-rgb);
+  --accent-light-rgb: var(--primary-rgb);
+  --ring-soft: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
+
+  // Base typography scale (desktop)
   --type-body: 14px;
   --type-h1: 28px;
   --type-h2: 20px;
@@ -16,18 +27,58 @@
   --lh-body: 1.55;
 }
 
-// Legacy theme hooks retained for backwards-compat of the Auth picker.
-// All resolve to the same emerald in v0.2.1; will likely be removed later.
-body[data-theme='green'],
-body[data-theme='blue'],
-body[data-theme='pink'],
-body[data-theme='red'],
-body[data-theme='gold'],
+body[data-theme='green'] {
+  --primary: #4de082;
+  --primary-rgb: 77, 224, 130;
+  --primary-container: #006e36;
+  --primary-container-rgb: 0, 110, 54;
+  --on-primary: #003919;
+  --on-primary-container: #63f494;
+}
+
+body[data-theme='blue'] {
+  --primary: #7cc4ff;
+  --primary-rgb: 124, 196, 255;
+  --primary-container: #004a7a;
+  --primary-container-rgb: 0, 74, 122;
+  --on-primary: #00233d;
+  --on-primary-container: #cfe4ff;
+}
+
+body[data-theme='pink'] {
+  --primary: #f9a8d4;
+  --primary-rgb: 249, 168, 212;
+  --primary-container: #9d174d;
+  --primary-container-rgb: 157, 23, 77;
+  --on-primary: #4c0519;
+  --on-primary-container: #fce7f3;
+}
+
+body[data-theme='red'] {
+  --primary: #fca5a5;
+  --primary-rgb: 252, 165, 165;
+  --primary-container: #b91c1c;
+  --primary-container-rgb: 185, 28, 28;
+  --on-primary: #450a0a;
+  --on-primary-container: #fee2e2;
+}
+
+body[data-theme='gold'] {
+  --primary: #f6d36b;
+  --primary-rgb: 246, 211, 107;
+  --primary-container: #a16207;
+  --primary-container-rgb: 161, 98, 7;
+  --on-primary: #422006;
+  --on-primary-container: #fef3c7;
+}
+
 body[data-theme='teal'] {
-  --accent: #{v.$green-light};
-  --accent-light: #{v.$green-light};
-  --accent-rgb: 77, 224, 130;
-  --accent-light-rgb: 77, 224, 130;
+  --primary: #5eead4;
+  --primary-rgb: 94, 234, 212;
+  --primary-container: #0f766e;
+  --primary-container-rgb: 15, 118, 110;
+  --on-primary: #042f2e;
+  --on-primary-container: #ccfbf1;
 }
 
 * {
@@ -35,7 +86,7 @@ body[data-theme='teal'] {
 }
 
 *::selection {
-  background: rgba(var(--accent-rgb), 0.25);
+  background: rgba(var(--primary-rgb), 0.25);
   color: v.$white;
 }
 
@@ -84,7 +135,7 @@ small {
 }
 
 .highlight {
-  background: rgba(var(--accent-light-rgb), 0.15);
+  background: rgba(var(--primary-rgb), 0.15);
   color: v.$white;
   padding: 0 3px;
   border-radius: 4px;
@@ -103,4 +154,4 @@ small {
 *::-webkit-scrollbar { width: 6px; height: 6px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: v.$surface-3; border-radius: v.$radius-pill; }
-*::-webkit-scrollbar-thumb:hover { background: v.$green-light; }
+*::-webkit-scrollbar-thumb:hover { background: var(--primary); }

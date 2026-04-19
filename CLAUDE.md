@@ -66,7 +66,6 @@ When Firestore data exists for a content type, it takes precedence and local fil
 - `Rightbar/` - Right sidebar with sub-components: Outline, Metadata, Related, Backlinks, BriefCompare, ListStats. Only rendered when `view` is `'doc'` or `'list'`.
 - `DocList/`, `SearchBar/` - Retained for future use / legacy; no longer mounted in Sidebar.
 - `NewListModal/` - Modal for creating new lists (launched from NewEntryModal).
-- `Tooltip/` - Portal-based tooltip using document event delegation on `[data-tooltip]` elements.
 - `ConfirmDialog/` - Themed confirmation dialog (replaces browser alerts)
 - `Auth/` and `LoginPage/` - Authentication UI
 
@@ -92,7 +91,6 @@ Notes and journals use **inline rich-text editing** powered by TipTap (no modal 
 - Rich-text content stored as TipTap JSON doc, converted to HTML via `richDocToHtml()` for display
 - Intersection Observer syncs active heading in right sidebar outline
 - GSAP animations for list item completion (promise-based, awaited before Firestore update)
-- Portal-based tooltips via `Tooltip` component — uses `mouseover`/`mouseout` delegation on `[data-tooltip]` attributes (no per-element wrappers). Add `data-tooltip="Label"` to any element to enable.
 - Search matches against title, slug, content, and tags for docs; title and item text for lists
 - Keyboard shortcuts: `/` search, arrow keys navigate, `Esc` close
 

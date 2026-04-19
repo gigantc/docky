@@ -43,10 +43,10 @@ export default memo(function ListItemContent({
             }}
             autoFocus
           />
-          <button className="list-item__action" type="button" onClick={onSaveEdit} aria-label="Save item" data-tooltip="Save">
+          <button className="list-item__action" type="button" onClick={onSaveEdit} aria-label="Save item">
             <Save aria-hidden="true" size={14} strokeWidth={2} />
           </button>
-          <button className="list-item__action" type="button" onClick={onCancelEdit} aria-label="Cancel edit" data-tooltip="Cancel">
+          <button className="list-item__action" type="button" onClick={onCancelEdit} aria-label="Cancel edit">
             <X aria-hidden="true" size={14} strokeWidth={2} />
           </button>
         </div>
@@ -61,7 +61,7 @@ export default memo(function ListItemContent({
               onStartEdit()
             }}
             aria-label="Edit item"
-            data-tooltip="Edit item"
+           
           >
             <Pencil aria-hidden="true" size={14} strokeWidth={2} />
           </button>
@@ -73,7 +73,7 @@ export default memo(function ListItemContent({
         type="button"
         onClick={onDelete}
         aria-label="Delete item"
-        data-tooltip="Delete item"
+       
       >
         <Trash2 aria-hidden="true" size={14} strokeWidth={2} />
       </button>

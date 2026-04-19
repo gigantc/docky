@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: center;
   background: v.$black;
-  color: v.$green-light;
+  color: var(--primary);
   animation: loader-pulse 1.6s ease-in-out infinite;
 }
 
@@ -60,7 +60,7 @@
 .modal__button--ghost {
   background: transparent;
   border: none;
-  color: v.$green-light;
+  color: var(--primary);
   box-shadow: none;
   padding: 10px 12px;
 }

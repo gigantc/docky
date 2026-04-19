@@ -4,14 +4,17 @@ import './AppHeader.scss'
 
 export default function AppHeader({
   user,
-  theme,
-  onThemeChange,
   version,
   query,
   onQueryChange,
 }) {
   return (
     <header className="app-header">
+      <div className="app-header__brand">
+        <div className="app-header__brand-title">The Dock</div>
+        <div className="app-header__brand-sub">dFree x Apollo</div>
+      </div>
+
       <div className="app-header__search">
         <Search size={14} strokeWidth={2} aria-hidden="true" />
         <input
@@ -23,7 +26,7 @@ export default function AppHeader({
       </div>
 
       <div className="app-header__actions">
-        <Auth user={user} theme={theme} onThemeChange={onThemeChange} version={version} />
+        <Auth user={user} version={version} />
       </div>
     </header>
   )
