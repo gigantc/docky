@@ -17,51 +17,51 @@ import {
   serverTimestamp,
 } from './firebase'
 import { extractInlineTags, uniqueTags } from './utils/tags'
-import { buildSnippet } from './utils/string.jsx'
-import { renderMarkdownWithOutline, parseBriefMarkets } from './utils/markdown'
+import { renderMarkdownWithOutline } from './utils/markdown'
 import { richDocToHtml } from './utils/richText'
 import { formatDate } from './utils/date'
 import { createId, sortDocs } from './utils/helpers'
 import NewListModal from './components/NewListModal/NewListModal'
+import NewEntryModal from './components/NewEntryModal/NewEntryModal'
 import ConfirmDialog from './components/ConfirmDialog/ConfirmDialog'
 import AppHeader from './components/AppHeader/AppHeader'
-import Rightbar from './components/Rightbar/Rightbar'
 import Sidebar from './components/Sidebar/Sidebar'
 import Viewer from './components/Viewer/Viewer'
+import Home from './components/Home/Home'
+import SelectionPanel from './components/SelectionPanel/SelectionPanel'
 import Tooltip from './components/Tooltip/Tooltip'
 import LoginPage from './components/LoginPage/LoginPage'
 
-const APP_VERSION = '0.1.5'
+const APP_VERSION = '0.2.1'
+const ARCHIVE_VIEWS = new Set(['notes', 'briefs', 'journals', 'lists'])
+
+const EMPTY_STATE_COPY = {
+  notes: { title: 'No note selected', sub: 'Pick a note from the left, or create one.' },
+  briefs: { title: 'No brief selected', sub: 'Pick a brief from the left, or create one.' },
+  journals: { title: 'No journal selected', sub: 'Pick an entry from the left, or write a new one.' },
+  lists: { title: 'No list selected', sub: 'Pick a list from the left, or create one.' },
+}
 
 export default function App() {
   const [firestoreDocs, setFirestoreDocs] = useState([])
   const [firestoreLists, setFirestoreLists] = useState([])
   const docs = useMemo(() => sortDocs(firestoreDocs), [firestoreDocs])
   const [query, setQuery] = useState('')
-  const [activePath, setActivePath] = useState(docs[0]?.path)
-  const [openSections, setOpenSections] = useState({ notes: true, lists: true, journal: true, briefs: true })
+  const [view, setView] = useState('home')
+  const [activePath, setActivePath] = useState(null)
+  const [activeListId, setActiveListId] = useState(null)
   const [user, setUser] = useState(null)
   const [authReady, setAuthReady] = useState(false)
   const [docsReady, setDocsReady] = useState(false)
   const [listsReady, setListsReady] = useState(false)
   const [showListModal, setShowListModal] = useState(false)
+  const [showNewEntry, setShowNewEntry] = useState(false)
   const [listTitle, setListTitle] = useState('')
   const [listSaving, setListSaving] = useState(false)
-  const [activeListId, setActiveListId] = useState(null)
   const [confirmDialog, setConfirmDialog] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('dock.theme') || 'green')
-  const [isMobileViewport, setIsMobileViewport] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return window.innerWidth <= 900
-  })
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    if (typeof window === 'undefined') return true
-    return window.innerWidth > 900
-  })
   const [autoEditDocId, setAutoEditDocId] = useState(null)
   const appRef = useRef(null)
-  const searchRef = useRef(null)
-  const isMobileRef = useRef(typeof window !== 'undefined' ? window.innerWidth <= 900 : false)
 
   useEffect(() => onAuthStateChanged(auth, (nextUser) => {
     setUser(nextUser)
@@ -74,25 +74,10 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
-    const syncSidebarForViewport = () => {
-      const isMobile = window.innerWidth <= 900
-      setIsMobileViewport(isMobile)
-      if (isMobile !== isMobileRef.current) {
-        isMobileRef.current = isMobile
-        setSidebarOpen(!isMobile)
-      }
-    }
-
-    // Handles device-emulation viewport settling after initial JS load.
-    requestAnimationFrame(syncSidebarForViewport)
-    window.addEventListener('resize', syncSidebarForViewport)
-    return () => window.removeEventListener('resize', syncSidebarForViewport)
-  }, [])
-
-  useEffect(() => {
     if (!user) {
       setActiveListId(null)
       setShowListModal(false)
+      setShowNewEntry(false)
       setConfirmDialog(null)
     }
   }, [user])
@@ -175,15 +160,6 @@ export default function App() {
     })
   }, [user])
 
-  useEffect(() => {
-    if (!activeListId) {
-      setConfirmDialog(null)
-    } else if (!firestoreLists.find((list) => list.id === activeListId)) {
-      setActiveListId(null)
-    }
-  }, [activeListId, firestoreLists])
-
-
   const createDocument = async (type, { title, tags = [] } = {}) => {
     if (!user) return
     const docTitle = title || 'Untitled'
@@ -200,7 +176,7 @@ export default function App() {
     setAutoEditDocId(docRef.id)
     setActivePath(`firestore:${type}/${docRef.id}`)
     setActiveListId(null)
-    if (isMobileViewport) setSidebarOpen(false)
+    setView(type === 'brief' ? 'briefs' : type === 'journal' ? 'journals' : 'notes')
   }
 
   const handleCreateNote = () => createDocument('note')
@@ -208,6 +184,13 @@ export default function App() {
   const handleCreateJournal = () => {
     const today = new Date().toISOString().slice(0, 10)
     return createDocument('journal', { title: `Daily Journal — ${today}`, tags: ['journal'] })
+  }
+
+  const handleNewEntrySelect = (type) => {
+    setShowNewEntry(false)
+    if (type === 'note') handleCreateNote()
+    else if (type === 'journal') handleCreateJournal()
+    else if (type === 'list') setShowListModal(true)
   }
 
   const handleUpdateNoteInline = async (docItem, { title, content, contentJson, tags }) => {
@@ -220,9 +203,7 @@ export default function App() {
       updatedAt: serverTimestamp(),
       isDraft: false,
     })
-    if (autoEditDocId === docItem.id) {
-      setAutoEditDocId(null)
-    }
+    if (autoEditDocId === docItem.id) setAutoEditDocId(null)
   }
 
   const handleDeleteNoteInline = async (docItem) => {
@@ -246,6 +227,8 @@ export default function App() {
       setShowListModal(false)
       setListTitle('')
       setActiveListId(docRef.id)
+      setActivePath(null)
+      setView('lists')
     } finally {
       setListSaving(false)
     }
@@ -274,12 +257,7 @@ export default function App() {
     const incomplete = items.filter((item) => !item.completed)
     const completed = items.filter((item) => item.completed)
     const nextItems = [
-      {
-        id: createId(),
-        text,
-        completed: false,
-        createdAt: Date.now(),
-      },
+      { id: createId(), text, completed: false, createdAt: Date.now() },
       ...incomplete,
       ...completed,
     ]
@@ -288,23 +266,14 @@ export default function App() {
 
   const runCompleteAnimation = (itemId) => new Promise((resolve) => {
     const el = document.querySelector(`[data-item-id="${itemId}"]`)
-    if (!el) {
-      resolve()
-      return
-    }
+    if (!el) { resolve(); return }
     el.classList.add('is-completing')
     const swipeEl = el.querySelector('.list-item__swipe')
-    if (!swipeEl) {
-      resolve()
-      return
-    }
+    if (!swipeEl) { resolve(); return }
     gsap.killTweensOf(swipeEl)
     gsap.set(swipeEl, { xPercent: -120, opacity: 0 })
     gsap.to(swipeEl, {
-      xPercent: 120,
-      opacity: 0,
-      duration: 0.6,
-      ease: 'power2.out',
+      xPercent: 120, opacity: 0, duration: 0.6, ease: 'power2.out',
       onStart: () => gsap.set(swipeEl, { opacity: 0.45 }),
       onComplete: resolve,
     })
@@ -320,15 +289,12 @@ export default function App() {
     const remainingIncomplete = remaining.filter((item) => !item.completed)
     const remainingCompleted = remaining.filter((item) => item.completed)
     const updated = { ...target, completed: !target.completed }
-    if (updated.completed) {
-      await runCompleteAnimation(itemId)
-    }
+    if (updated.completed) await runCompleteAnimation(itemId)
     const nextItems = updated.completed
       ? [...remainingIncomplete, ...remainingCompleted, updated]
       : [updated, ...remainingIncomplete, ...remainingCompleted]
     await updateListItems(listId, nextItems)
   }
-
 
   const handleEditListItem = async (listId, itemId, nextText) => {
     const list = firestoreLists.find((item) => item.id === listId)
@@ -348,7 +314,6 @@ export default function App() {
     await updateListItems(listId, nextItems)
   }
 
-
   const handleDiscardNewDocInline = async (docItem) => {
     if (!docItem?.id) return
     await deleteDoc(doc(db, 'notes', docItem.id))
@@ -356,7 +321,6 @@ export default function App() {
     setActivePath(null)
     setActiveListId(null)
   }
-
 
   const requestDiscardNewDoc = (docItem) => {
     openConfirmDialog({
@@ -368,7 +332,7 @@ export default function App() {
   }
 
   const handleDeleteList = async () => {
-    if (!activeListId || !activeList) return
+    if (!activeListId) return
     await deleteDoc(doc(db, 'lists', activeListId))
     setActiveListId(null)
   }
@@ -404,11 +368,11 @@ export default function App() {
     await updateListItems(activeListId, [...nextIncomplete, ...completed])
   }
 
-  const filtered = useMemo(() => {
+  const filteredDocs = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return docs
-    return docs.filter((doc) => {
-      const haystack = `${doc.title} ${doc.slug} ${doc.content} ${(doc.tags || []).join(' ')}`.toLowerCase()
+    return docs.filter((d) => {
+      const haystack = `${d.title} ${d.slug} ${d.content} ${(d.tags || []).join(' ')}`.toLowerCase()
       return haystack.includes(q)
     })
   }, [docs, query])
@@ -418,14 +382,13 @@ export default function App() {
     if (!q) return firestoreLists
     return firestoreLists.filter((list) => {
       const itemText = (list.items || []).map((item) => item.text).join(' ')
-      const haystack = `${list.title} ${itemText}`.toLowerCase()
-      return haystack.includes(q)
+      return `${list.title} ${itemText}`.toLowerCase().includes(q)
     })
   }, [firestoreLists, query])
 
   const activeDoc = useMemo(
-    () => (activeListId ? null : filtered.find((doc) => doc.path === activePath) || filtered[0]),
-    [activeListId, filtered, activePath],
+    () => (activeListId ? null : filteredDocs.find((d) => d.path === activePath) || null),
+    [activeListId, filteredDocs, activePath],
   )
   const activeList = useMemo(
     () => firestoreLists.find((list) => list.id === activeListId) || null,
@@ -439,34 +402,6 @@ export default function App() {
     return { total, completed }
   }, [activeList])
 
-  const outline = activeDoc?.outline || []
-
-  const backlinks = useMemo(() => {
-    if (!activeDoc) return []
-    const needle = activeDoc.title?.toLowerCase()
-    if (!needle) return []
-    return docs.filter((doc) => {
-      if (doc.path === activeDoc.path) return false
-      return doc.content.toLowerCase().includes(needle)
-    })
-  }, [docs, activeDoc])
-
-  const snippetMap = useMemo(() => {
-    if (!activeDoc?.title) return new Map()
-    const map = new Map()
-    backlinks.forEach((doc) => {
-      map.set(doc.path, buildSnippet(doc.content, activeDoc.title))
-    })
-    return map
-  }, [backlinks, activeDoc])
-
-  const docStats = useMemo(() => {
-    if (!activeDoc) return { words: 0, minutes: 0 }
-    const words = activeDoc.content.split(/\s+/).filter(Boolean).length
-    const minutes = Math.max(1, Math.round(words / 200))
-    return { words, minutes }
-  }, [activeDoc])
-
   const briefGreeting = useMemo(() => {
     if (!activeDoc?.isBrief) return null
     const dateStr = activeDoc.created || ''
@@ -475,106 +410,40 @@ export default function App() {
     const variants = [
       `Good morning, dFree — Happy ${weekday}.`,
       `Rise and shine, dFree. Happy ${weekday}!`,
-      `Morning, dFree. Let’s win this ${weekday}.`,
+      `Morning, dFree. Let's win this ${weekday}.`,
       `Hey dFree — fresh ${weekday}, fresh brief.`,
     ]
     const index = date.getDate() % variants.length
     return variants[index]
   }, [activeDoc])
 
-  const relatedDocs = useMemo(() => {
-    if (!activeDoc?.tags?.length) return []
-    const activeTags = new Set(activeDoc.tags.map((tag) => tag.toLowerCase()))
-    return docs
-      .filter((doc) => doc.path !== activeDoc.path)
-      .map((doc) => {
-        const overlap = doc.tags.filter((tag) => activeTags.has(tag.toLowerCase()))
-        return { doc, score: overlap.length, overlap }
-      })
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5)
-  }, [docs, activeDoc])
-
-  const briefCompare = useMemo(() => {
-    if (!activeDoc?.isBrief) return null
-    const briefDocs = docs
-      .filter((doc) => doc.isBrief && doc.created)
-      .sort((a, b) => a.created.localeCompare(b.created))
-
-    const index = briefDocs.findIndex((item) => item.path === activeDoc.path)
-    if (index <= 0) return null
-
-    const today = briefDocs[index]
-    const yesterday = briefDocs[index - 1]
-
-    return {
-      today,
-      yesterday,
-      todayMarkets: parseBriefMarkets(today.content),
-      yesterdayMarkets: parseBriefMarkets(yesterday.content),
-    }
-  }, [docs, activeDoc])
-
-  useEffect(() => {
-    if (activeListId) return
-    if (filtered.length && !filtered.find((doc) => doc.path === activePath)) {
-      setActivePath(filtered[0].path)
-    }
-  }, [filtered, activePath, activeListId])
-
-
-  const grouped = useMemo(() => {
-    const excludedNoteTitles = new Set(['Brief Archive', 'The Dock Docs'])
-    const journals = filtered.filter((doc) => doc.isJournal)
-    const briefs = filtered.filter((doc) => doc.isBrief)
-    const notes = filtered.filter((doc) => !doc.isJournal && !doc.isBrief)
-      .filter((doc) => !excludedNoteTitles.has(doc.title))
-    return { journals, briefs, notes }
-  }, [filtered])
-
-  const totalCount = docs.length + firestoreLists.length
-  const filteredCount = filtered.length + filteredLists.length
-
-  useEffect(() => {
-    if (!appRef.current) return
-    const targetWidth = isMobileViewport
-      ? 42
-      : (sidebarOpen ? 320 : 56)
-
-    gsap.to(appRef.current, {
-      '--sidebar-width': `${targetWidth}px`,
-      duration: 0.3,
-      ease: 'power2.inOut',
-      overwrite: 'auto',
-    })
-  }, [sidebarOpen, isMobileViewport])
+  const viewForDoc = useCallback((docItem) => {
+    if (!docItem) return 'notes'
+    if (docItem.isBrief) return 'briefs'
+    if (docItem.isJournal) return 'journals'
+    return 'notes'
+  }, [])
 
   const handleSelectDoc = useCallback((path) => {
     setAutoEditDocId(null)
     setActivePath(path)
     setActiveListId(null)
-    if (isMobileViewport) setSidebarOpen(false)
-  }, [isMobileViewport])
+    const docItem = docs.find((d) => d.path === path)
+    if (docItem) setView(viewForDoc(docItem))
+  }, [docs, viewForDoc])
 
   const handleSelectList = useCallback((id) => {
     setAutoEditDocId(null)
     setActiveListId(id)
     setActivePath(null)
-    if (isMobileViewport) setSidebarOpen(false)
-  }, [isMobileViewport])
+    setView('lists')
+  }, [])
 
-  const handleNavigate = useCallback((path) => {
-    setActivePath(path)
+  const handleViewChange = useCallback((nextView) => {
+    setView(nextView)
+    setActivePath(null)
     setActiveListId(null)
-  }, [])
-
-  const handleToggleSection = useCallback((key) => {
-    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
-  }, [])
-
-  const handleToggleSidebar = useCallback(() => {
-    setSidebarOpen((prev) => !prev)
+    setAutoEditDocId(null)
   }, [])
 
   const appLoading = !authReady || (user && (!docsReady || !listsReady))
@@ -588,13 +457,15 @@ export default function App() {
     </div>
   )
 
-  if (!user) {
-    return <LoginPage />
-  }
+  if (!user) return <LoginPage />
+
+  const isArchive = ARCHIVE_VIEWS.has(view)
+  const hasSelection = isArchive && (activeDoc || activeList)
+  const appClass = `app ${isArchive ? 'app--archive' : 'app--home'}`
+  const emptyCopy = EMPTY_STATE_COPY[view] || EMPTY_STATE_COPY.notes
 
   return (
-    <div className="app" ref={appRef}>
-
+    <div className={appClass} ref={appRef}>
       {showListModal && (
         <NewListModal
           listTitle={listTitle}
@@ -605,82 +476,107 @@ export default function App() {
         />
       )}
 
+      {showNewEntry && (
+        <NewEntryModal
+          onClose={() => setShowNewEntry(false)}
+          onSelect={handleNewEntrySelect}
+        />
+      )}
+
       <ConfirmDialog
         dialog={confirmDialog}
         onClose={closeConfirmDialog}
         onConfirm={handleConfirmAction}
       />
 
-
       <AppHeader
         user={user}
         theme={theme}
         onThemeChange={setTheme}
         version={APP_VERSION}
+        query={query}
+        onQueryChange={setQuery}
       />
 
       <Sidebar
-        ref={searchRef}
-        query={query}
-        onQueryChange={setQuery}
-        filteredCount={filteredCount}
-        totalCount={totalCount}
-        grouped={grouped}
-        filteredLists={filteredLists}
-        openSections={openSections}
-        onToggleSection={handleToggleSection}
-        activeDoc={activeDoc}
-        activeListId={activeListId}
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={handleToggleSidebar}
-        onNewNote={handleCreateNote}
-        onNewList={() => setShowListModal(true)}
-        onNewJournal={handleCreateJournal}
-        onSelectDoc={handleSelectDoc}
-        onSelectList={handleSelectList}
+        view={view}
+        onViewChange={handleViewChange}
+        onNewEntry={() => setShowNewEntry(true)}
+        sidebarMode={isArchive ? 'rail' : 'full'}
       />
 
-      <Viewer
-        activeList={activeList}
-        activeDoc={activeDoc}
-        listStats={listStats}
-        briefGreeting={briefGreeting}
-        user={user}
-        autoEditDocId={autoEditDocId}
-        onSaveDoc={handleUpdateNoteInline}
-        onDiscardNewDoc={handleDiscardNewDocInline}
-        onRequestDiscardNewDoc={requestDiscardNewDoc}
-        onDeleteDoc={(docItem) => openConfirmDialog({
-          title: docItem?.isBrief ? 'Delete brief?' : 'Delete note?',
-          body: <>Delete <strong>{docItem?.title || 'Untitled'}</strong>? This cannot be undone.</>,
-          confirmLabel: docItem?.isBrief ? 'Delete Brief' : 'Delete Note',
-          onConfirm: () => handleDeleteNoteInline(docItem),
-        })}
-        onAddListItem={handleAddListItem}
-        onToggleListItem={handleToggleListItem}
-        onDeleteListItem={handleDeleteListItem}
-        onEditListItem={handleEditListItem}
-        onDeleteList={() => openConfirmDialog({
-          title: 'Delete list?',
-          body: <>Delete <strong>{activeList?.title}</strong>? This cannot be undone.</>,
-          onConfirm: handleDeleteList,
-        })}
-        onRenameList={handleRenameList}
-        onDragEnd={handleDragEnd}
-      />
+      {isArchive && (
+        <SelectionPanel
+          type={view}
+          docs={docs}
+          lists={firestoreLists}
+          activePath={activePath}
+          activeListId={activeListId}
+          onSelectDoc={handleSelectDoc}
+          onSelectList={handleSelectList}
+          onNew={() => {
+            if (view === 'notes') handleCreateNote()
+            else if (view === 'journals') handleCreateJournal()
+            else if (view === 'briefs') createDocument('brief', { title: 'Morning Brief', tags: ['brief'] })
+            else if (view === 'lists') setShowListModal(true)
+          }}
+        />
+      )}
 
-      <Rightbar
-        activeList={activeList}
-        activeDoc={activeDoc}
-        listStats={listStats}
-        outline={outline}
-        docStats={docStats}
-        briefCompare={briefCompare}
-        relatedDocs={relatedDocs}
-        backlinks={backlinks}
-        snippetMap={snippetMap}
-        onNavigate={handleNavigate}
-      />
+      {view === 'home' && (
+        <Home
+          docs={filteredDocs}
+          lists={filteredLists}
+          user={user}
+          onSelectDoc={handleSelectDoc}
+          onSelectList={handleSelectList}
+          onNewEntry={(type) => {
+            if (type === 'journal') handleCreateJournal()
+            else if (type === 'brief') createDocument('brief', { title: 'Morning Brief', tags: ['brief'] })
+            else setShowNewEntry(true)
+          }}
+        />
+      )}
+
+      {isArchive && hasSelection && (
+        <Viewer
+          activeList={activeList}
+          activeDoc={activeDoc}
+          listStats={listStats}
+          briefGreeting={briefGreeting}
+          user={user}
+          autoEditDocId={autoEditDocId}
+          onSaveDoc={handleUpdateNoteInline}
+          onDiscardNewDoc={handleDiscardNewDocInline}
+          onRequestDiscardNewDoc={requestDiscardNewDoc}
+          onDeleteDoc={(docItem) => openConfirmDialog({
+            title: docItem?.isBrief ? 'Delete brief?' : 'Delete note?',
+            body: <>Delete <strong>{docItem?.title || 'Untitled'}</strong>? This cannot be undone.</>,
+            confirmLabel: docItem?.isBrief ? 'Delete Brief' : 'Delete Note',
+            onConfirm: () => handleDeleteNoteInline(docItem),
+          })}
+          onAddListItem={handleAddListItem}
+          onToggleListItem={handleToggleListItem}
+          onDeleteListItem={handleDeleteListItem}
+          onEditListItem={handleEditListItem}
+          onDeleteList={() => openConfirmDialog({
+            title: 'Delete list?',
+            body: <>Delete <strong>{activeList?.title}</strong>? This cannot be undone.</>,
+            onConfirm: handleDeleteList,
+          })}
+          onRenameList={handleRenameList}
+          onDragEnd={handleDragEnd}
+        />
+      )}
+
+      {isArchive && !hasSelection && (
+        <main className="archive-empty">
+          <div className="archive-empty__card">
+            <h2>{emptyCopy.title}</h2>
+            <p>{emptyCopy.sub}</p>
+          </div>
+        </main>
+      )}
 
       <Tooltip />
     </div>

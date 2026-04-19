@@ -1,36 +1,45 @@
-// Colors
-$black: #0e1117;
-$white: #f4fff8;
-$muted: #b6bfd4;
-$green: #0a5c36;
-$green-light: #6fdc9a;
-$danger: #ff6b6b;
+// Colors — Emerald Dark (v0.2.1)
+$black: #131313;         // base background (warm near-black)
+$surface-1: #1c1b1b;     // sidebar, low surfaces
+$surface-2: #201f1f;     // cards, containers
+$surface-3: #2a2a2a;     // hover, selected
+$surface-4: #353534;     // active, highest elevation
+$white: #e5e2e1;         // primary text (warm off-white)
+$muted: #bfc9c1;         // secondary text
+$green: #006e36;         // deep emerald (primary container)
+$green-light: #4de082;   // bright emerald (primary accent)
+$on-primary: #003919;    // text on bright primary
+$on-primary-container: #63f494; // text on deep emerald container
+$outline-variant: #404943;
+$danger: #ffb4ab;
 
-// Semantic colors
-$gradient-bg: radial-gradient(circle at top, rgba($green, 0.14), transparent 45%);
-$swipe-gradient: linear-gradient(90deg, transparent 0%, rgba($green, 0.3) 35%, rgba($green, 0.55) 50%, rgba($green, 0.3) 65%, transparent 100%);
-$heading-gradient: linear-gradient(135deg, rgba($green, 0.9), rgba($green, 0.82));
+// Semantic gradients
+$gradient-bg: radial-gradient(circle at top, rgba($green-light, 0.06), transparent 45%);
+$swipe-gradient: linear-gradient(90deg, transparent 0%, rgba($green-light, 0.3) 35%, rgba($green-light, 0.55) 50%, rgba($green-light, 0.3) 65%, transparent 100%);
+$heading-gradient: linear-gradient(135deg, rgba($green-light, 0.95), rgba($green, 0.85));
 
-// Radii
-$radius-s: 12px;
-$radius-m: 16px;
-$radius-l: 28px;
+// Radii — tighter per comp
+$radius-s: 4px;
+$radius-m: 8px;
+$radius-l: 12px;
 $radius-pill: 999px;
 
 // Shadows
-$elevation-1: 0 1px 2px rgba($black, 0.5), 0 4px 16px rgba($black, 0.35);
-$elevation-2: 0 6px 20px rgba($black, 0.5), 0 12px 28px rgba($black, 0.45);
+$elevation-1: 0 1px 2px rgba(#000, 0.5), 0 4px 16px rgba(#000, 0.35);
+$elevation-2: 0 6px 20px rgba(#000, 0.5), 0 12px 28px rgba(#000, 0.45);
 $ring: 0 0 0 2px rgba($green-light, 0.5);
 $ring-soft: 0 0 0 3px rgba($green-light, 0.3);
 
 // Typography
-$font-stack: "Roboto Flex", "Roboto", "Inter", system-ui, -apple-system, sans-serif;
-$fw-normal: 360;
-$fw-light: 380;
-$fw-medium: 420;
-$fw-semi: 520;
-$fw-semi-bold: 540;
-$fw-bold: 560;
+$font-body: 'Inter', system-ui, -apple-system, sans-serif;
+$font-headline: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+$font-stack: $font-body; // back-compat
+$fw-light: 300;
+$fw-normal: 400;
+$fw-medium: 500;
+$fw-semi: 600;
+$fw-semi-bold: 600;
+$fw-bold: 700;
 $fs-xs: 11px;
 $fs-sm: 12px;
 $fs-base: 14px;

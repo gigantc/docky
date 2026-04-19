@@ -2,61 +2,32 @@
 
 :root {
   color-scheme: dark;
-  --accent: #0a5c36;
-  --accent-light: #6fdc9a;
-  --accent-rgb: 10, 92, 54;
-  --accent-light-rgb: 111, 220, 154;
+  --accent: #{v.$green-light};
+  --accent-light: #{v.$green-light};
+  --accent-rgb: 77, 224, 130;
+  --accent-light-rgb: 77, 224, 130;
   --ring-soft: 0 0 0 3px rgba(var(--accent-light-rgb), 0.3);
 
-  // Base typography scale (desktop defaults)
   --type-body: 14px;
-  --type-h1: 26px;
+  --type-h1: 28px;
   --type-h2: 20px;
-  --type-h3: 17px;
+  --type-h3: 16px;
   --type-meta: 12px;
   --lh-body: 1.55;
 }
 
-body[data-theme='blue'] {
-  --accent: #3b82f6;
-  --accent-light: #7cc4ff;
-  --accent-rgb: 59, 130, 246;
-  --accent-light-rgb: 124, 196, 255;
-}
-
-body[data-theme='pink'] {
-  --accent: #ec4899;
-  --accent-light: #f9a8d4;
-  --accent-rgb: 236, 72, 153;
-  --accent-light-rgb: 249, 168, 212;
-}
-
-body[data-theme='red'] {
-  --accent: #ef4444;
-  --accent-light: #fca5a5;
-  --accent-rgb: 239, 68, 68;
-  --accent-light-rgb: 252, 165, 165;
-}
-
-body[data-theme='gold'] {
-  --accent: #d4a017;
-  --accent-light: #f6d36b;
-  --accent-rgb: 212, 160, 23;
-  --accent-light-rgb: 246, 211, 107;
-}
-
+// Legacy theme hooks retained for backwards-compat of the Auth picker.
+// All resolve to the same emerald in v0.2.1; will likely be removed later.
+body[data-theme='green'],
+body[data-theme='blue'],
+body[data-theme='pink'],
+body[data-theme='red'],
+body[data-theme='gold'],
 body[data-theme='teal'] {
-  --accent: #14b8a6;
-  --accent-light: #5eead4;
-  --accent-rgb: 20, 184, 166;
-  --accent-light-rgb: 94, 234, 212;
-}
-
-body[data-theme='green'] {
-  --accent: #0a5c36;
-  --accent-light: #6fdc9a;
-  --accent-rgb: 10, 92, 54;
-  --accent-light-rgb: 111, 220, 154;
+  --accent: #{v.$green-light};
+  --accent-light: #{v.$green-light};
+  --accent-rgb: 77, 224, 130;
+  --accent-light-rgb: 77, 224, 130;
 }
 
 * {
@@ -64,39 +35,35 @@ body[data-theme='green'] {
 }
 
 *::selection {
-  background: rgba(var(--accent-rgb), 0.35);
+  background: rgba(var(--accent-rgb), 0.25);
   color: v.$white;
 }
 
 body {
   margin: 0;
-  font-family: v.$font-stack;
+  font-family: v.$font-body;
   font-weight: v.$fw-normal;
   font-size: var(--type-body);
   line-height: var(--lh-body);
-  background:
-    radial-gradient(circle at top, rgba(var(--accent-rgb), 0.14), transparent 45%),
-    v.$black;
+  background: v.$black;
   color: v.$white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
+  font-family: v.$font-headline;
   margin: 0 0 0.5em;
   line-height: 1.22;
-  letter-spacing: 0.005em;
+  letter-spacing: -0.005em;
+  font-weight: v.$fw-medium;
 }
 
 h1 { font-size: var(--type-h1); }
 h2 { font-size: var(--type-h2); }
 h3 { font-size: var(--type-h3); }
 
-p,
-li {
+p, li {
   font-size: var(--type-body);
   line-height: var(--lh-body);
 }
@@ -108,9 +75,9 @@ small {
 @media (max-width: 900px) {
   :root {
     --type-body: 13px;
-    --type-h1: 18px;
-    --type-h2: 15px;
-    --type-h3: 13px;
+    --type-h1: 22px;
+    --type-h2: 17px;
+    --type-h3: 14px;
     --type-meta: 11px;
     --lh-body: 1.45;
   }
@@ -120,7 +87,7 @@ small {
   background: rgba(var(--accent-light-rgb), 0.15);
   color: v.$white;
   padding: 0 3px;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .tag {
@@ -131,3 +98,9 @@ small {
   font-size: v.$fs-sm;
   color: v.$muted;
 }
+
+// Custom scrollbars
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: v.$surface-3; border-radius: v.$radius-pill; }
+*::-webkit-scrollbar-thumb:hover { background: v.$green-light; }

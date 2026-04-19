@@ -43,9 +43,9 @@ When Firestore data exists for a content type, it takes precedence and local fil
 
 ### Key files
 
-- `src/App.jsx` - Main component. State management, Firestore subscriptions, event handlers, search, and keyboard navigation. Delegates rendering to extracted components. Includes loading gate (`authReady`, `docsReady`, `listsReady`) that shows a splash loader until auth + data are resolved.
+- `src/App.jsx` - Main component. State management, Firestore subscriptions, top-level `view` state (`'home' | 'notes' | 'briefs' | 'journals' | 'lists' | 'doc' | 'list'`), event handlers. Delegates rendering to extracted components. Includes loading gate (`authReady`, `docsReady`, `listsReady`) that shows a splash loader until auth + data are resolved.
 - `src/firebase.js` - Firebase init and re-exports of auth/firestore SDK methods. All Firestore imports come through here.
-- `src/App.scss` - CSS Grid layout: 3-column (280px sidebar, 1fr main, 280px rightbar).
+- `src/App.scss` - CSS Grid layout. Default 3-column (sidebar, viewer, rightbar). `.app--full` modifier drops the rightbar for Home and archive views.
 - `src/styles/_variables.scss` - All design tokens (colors, typography, radii, shadows, transitions).
 - `src/styles/_mixins.scss` - Reusable mixins: `surface-tint`, `state-layer`, `input-field`, `focus-ring`, `button-reset`.
 - `src/styles/_base.scss` - Reset, body defaults, `.tag` and `.highlight` base classes.
@@ -54,17 +54,19 @@ When Firestore data exists for a content type, it takes precedence and local fil
 
 ### Component structure
 
-- `AppHeader/` - Top header bar
-- `Sidebar/` - Left sidebar with collapsible rail (42px collapsed on mobile), drawer overlay. Collapsed layout uses `order: -1` on toggle to keep it above action buttons — no absolute positioning.
-- `Viewer/` - Main content area wrapping DocumentView and ListView
+- `AppHeader/` - Top header bar. Global search input (left) + Auth avatar/menu (right).
+- `Sidebar/` - **Nav-based**: brand wordmark, 5 top-level links (Home, Briefs, Notes, Journals, Lists), "+ New Entry" button, Settings/Help stubs, collapse toggle. Active link gets `is-active` + left border in emerald. Collapses to icon-only rail on mobile.
+- `Home/` - Emerald dashboard rendered when `view === 'home'`. Featured card uses the most recent brief from Firestore; bento grid shows Recent Notes, Active Lists, Personal Journals. Quick Metrics tile is an empty shell until we decide what to measure. Weather text is a static placeholder.
+- `ArchiveView/` - Simple stop-gap list rendered for `view` in `notes`/`briefs`/`journals`/`lists`. Will be replaced with dedicated archive layouts in a later pass.
+- `NewEntryModal/` - Picker modal (Note / Journal / List). Opened by the sidebar "+ New Entry" button. Dispatches to existing create flows.
+- `Viewer/` - Main content area wrapping DocumentView and ListView (shown when `view` is `'doc'` or `'list'`).
 - `DocumentView/` - Inline rich-text editing and reading for notes/journals/briefs (TipTap)
 - `ListView/` - Checklist view with inline item editing, drag-and-drop reorder
 - `ListView/SortableListItem` - Individual draggable list item
-- `Rightbar/` - Right sidebar with sub-components: Outline, Metadata, Related, Backlinks, BriefCompare, ListStats
-- `DocList/` - Document list rendering (DocListSection, DocListItem)
-- `SearchBar/` - Search input
-- `NewListModal/` - Modal for creating new lists
-- `Tooltip/` - Portal-based tooltip using document event delegation on `[data-tooltip]` elements. Positions below by default, flips above near viewport bottom, arrow tracks trigger center. 500ms delay with warm-window (300ms) for quick successive hovers. Hidden on touch devices.
+- `Rightbar/` - Right sidebar with sub-components: Outline, Metadata, Related, Backlinks, BriefCompare, ListStats. Only rendered when `view` is `'doc'` or `'list'`.
+- `DocList/`, `SearchBar/` - Retained for future use / legacy; no longer mounted in Sidebar.
+- `NewListModal/` - Modal for creating new lists (launched from NewEntryModal).
+- `Tooltip/` - Portal-based tooltip using document event delegation on `[data-tooltip]` elements.
 - `ConfirmDialog/` - Themed confirmation dialog (replaces browser alerts)
 - `Auth/` and `LoginPage/` - Authentication UI
 
@@ -94,113 +96,127 @@ Notes and journals use **inline rich-text editing** powered by TipTap (no modal 
 - Search matches against title, slug, content, and tags for docs; title and item text for lists
 - Keyboard shortcuts: `/` search, arrow keys navigate, `Esc` close
 
-## Styling Guide (M3 Dark Theme)
+## Styling Guide (Emerald Dark — v0.2.1)
 
-The app follows Material Design 3 dark theme principles. **All styling is SCSS only — no inline styles, no CSS-in-JS, no Tailwind.** Each component has its own `.scss` file that imports `_variables` and/or `_mixins`.
+The app uses a warm-neutral dark theme with bright emerald accents. **All styling is SCSS only — no inline styles, no CSS-in-JS, no Tailwind.** Each component has its own `.scss` file that imports `_variables` and/or `_mixins`.
 
-### Color palette (6 colors only)
+### Typography
+
+- **Body / UI (`$font-body`):** `Inter` — default for all prose, labels, and buttons.
+- **Headline (`$font-headline`):** `Space Grotesk` — applied to `h1-h6` by default and anywhere the `home__*` / `archive__*` classes define a display voice. Use sparingly for editorial emphasis.
+
+Google Fonts are loaded from `index.html`. Do not import them from component SCSS.
+
+### Color palette
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `$black` | `#0e1117` | Base background |
-| `$white` | `#f4fff8` | Primary text |
-| `$muted` | `#b6bfd4` | Secondary text, meta, labels |
-| `$green` | `#0a5c36` | Filled button backgrounds, heading gradients |
-| `$green-light` | `#6fdc9a` | Links, active states, tonal button text, focus rings, text buttons |
-| `$danger` | `#ff6b6b` | Destructive actions |
+| `$black` | `#131313` | Base background (warm near-black) |
+| `$surface-1` | `#1c1b1b` | Sidebar, low surfaces, card backgrounds |
+| `$surface-2` | `#201f1f` | Containers, modals |
+| `$surface-3` | `#2a2a2a` | Hover state, active sidebar |
+| `$surface-4` | `#353534` | Highest elevation / selected |
+| `$white` | `#e5e2e1` | Primary text (warm off-white) |
+| `$muted` | `#bfc9c1` | Secondary text, meta, labels |
+| `$green` | `#006e36` | Deep emerald — primary container (chip bg, hero glow) |
+| `$green-light` | `#4de082` | **Primary accent** — buttons, active nav, links, focus rings, chips |
+| `$on-primary` | `#003919` | Text on bright `$green-light` fills |
+| `$on-primary-container` | `#63f494` | Text on deep `$green` containers |
+| `$outline-variant` | `#404943` | Borders — use at 20–30% alpha (`rgba($outline-variant, 0.3)`) |
+| `$danger` | `#ffb4ab` | Destructive accents and outlined delete buttons |
 
-**Do not add new colors.** Use `rgba()` variants of these 6 for all tints, borders, and overlays.
+**Do not add new colors.** Use `rgba()` of the tokens above for tints and overlays.
 
-### Surface tinting (depth via `surface-tint` mixin)
+### Surface tiers (via `surface-tint` mixin)
 
-Instead of multiple surface color variables, depth is achieved by overlaying `$green-light` at varying alpha on `$black`:
+Depth is achieved by picking an explicit surface tier — **not** by overlaying accent color on black. The mixin now resolves to solid background colors:
 
-| Level | Alpha | Usage |
+| Level | Color | Usage |
 |-------|-------|-------|
-| 0 | pure `$black` | Viewer background, page bg |
-| 1 | 5% | Sidebar, rightbar, list items |
-| 2 | 8% | Header, modals, rightbar section cards, inputs, auth |
-| 3 | 11% | Hover states |
-| 4 | 14% | Active/selected states |
+| 0 | `$black` | Viewer background, page bg |
+| 1 | `$surface-1` | Sidebar, list items, bento cards |
+| 2 | `$surface-2` | Header, modals, rightbar sections |
+| 3 | `$surface-3` | Hover states |
+| 4 | `$surface-4` | Active / selected |
 
 ```scss
-@include m.surface-tint(1); // in component scss
+@include m.surface-tint(1);
 ```
 
-### State layers (interaction feedback via `state-layer` mixin)
+### State layers (`state-layer` mixin)
 
-All interactive elements (buttons, list items, links) must have visible hover/focus/active feedback. The `state-layer` mixin adds a `::before` overlay:
+All interactive elements should get visible hover/focus/active feedback. The mixin adds a `::before` overlay:
 
-- Hover: `opacity: 0.08`
-- Focus-visible: `opacity: 0.12`
-- Active: `opacity: 0.12`
+- Hover: `opacity: 0.06`
+- Focus-visible / Active: `opacity: 0.1`
 
 ```scss
 @include m.state-layer; // requires position: relative (mixin sets it)
 ```
 
-**Important:** Elements using `state-layer` must have `position: relative` and child content needs `position: relative; z-index: 1` if it must render above the overlay.
+Child content that must render above the overlay needs `position: relative; z-index: 1`.
 
-### Button hierarchy (M3 levels)
+### Button hierarchy
 
-All buttons use `border-radius: $radius-pill` and get `@include m.state-layer` for interaction feedback.
+Buttons are tighter than before — `$radius-m` (8px) rather than pill, and weight shifts to typographic presence.
 
-| Type | Background | Border | Text | Padding | Usage |
-|------|-----------|--------|------|---------|-------|
-| **Filled** | `$green` | none | `$white` | `10px 24px` | Add, Save, Sign In |
-| **Tonal** | `rgba($green-light, 0.15)` | none | `$green-light` | `10px 16px` | New Note, New List |
-| **Outlined** | transparent | `rgba($white, 0.12)` | `$white` | `10px 16px` | Rename, Edit |
-| **Text** | transparent | none | `$green-light` | `10px 12px` | Cancel, ghost buttons |
-| **Danger outlined** | transparent | `rgba($danger, 0.45)` | `$danger` | `10px 16px` | Delete |
+| Type | Background | Border | Text | Usage |
+|------|-----------|--------|------|-------|
+| **Filled primary** | `$green-light` | none | `$on-primary` | Main CTA (Read Full Analysis, Save, Sign In) |
+| **Tonal** | `rgba($green-light, 0.08)` | `rgba($green-light, 0.2)` (optional) | `$green-light` | Secondary CTA (Write New Entry, New Note) |
+| **Outlined** | transparent | `rgba($outline-variant, 0.3)` | `$white` | Neutral actions |
+| **Text** | transparent | none | `$green-light` | Cancel / ghost |
+| **Danger outlined** | transparent | `rgba($danger, 0.45)` | `$danger` | Destructive |
 
-### Input fields (M3 filled style via `input-field` mixin)
-
-```scss
-@include m.input-field;
-```
-
-- Top corners rounded (`$radius-m`), bottom corners flat
-- `background: rgba($white, 0.06)`, `border-bottom: 2px solid rgba($white, 0.15)`
-- Focus: `border-bottom-color: $green-light`, `background: rgba($white, 0.08)`
-- **Never** use `background: $black` or `box-shadow: inset` for inputs
+Filled primary is provided by `@include m.button-filled;`.
 
 ### Borders
 
-All panel/card borders must be **visible**: `border: 1px solid rgba($white, 0.06)`. Never use `border-color: $black` (invisible on dark bg).
+All panel/card borders use `1px solid rgba($outline-variant, 0.3)` (use 0.15–0.2 for subtle dividers). Never use `$black` for borders (invisible on dark bg).
+
+### Radii
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `$radius-s` | 4px | Chips, small pills, inline tags |
+| `$radius-m` | 8px | Buttons, inputs |
+| `$radius-l` | 12px | Cards, modals, bento tiles |
+| `$radius-pill` | 999px | Legacy pill buttons, scrollbar thumbs |
 
 ### Typography scale
 
 | Token | Size | Usage |
 |-------|------|-------|
-| `$fs-xs` | 11px | Error messages, fine print |
-| `$fs-sm` | 12px | Labels, meta text, button text |
-| `$fs-base` | 14px | Body text, list items, inputs (default) |
-| `$fs-md` | 16px | Modal titles, secondary headings |
-| `$fs-lg` | 22px | Brand title, large headings |
-| `$fs-xl` | 28px | Document/list titles (h1) |
+| `$fs-xs` | 11px | Meta, fine print, eyebrow labels |
+| `$fs-sm` | 12px | Labels, button text, card meta |
+| `$fs-base` | 14px | Body text, list items (default) |
+| `$fs-md` | 16px | Modal subtitles, secondary headings |
+| `$fs-lg` | 22px | Modal titles, medium headings |
+| `$fs-xl` | 28px | Document / list titles |
 
-Use tokens, not hardcoded px values. Body default is `$fs-base` (14px).
+Display-size headings (Home hero, Archive head) use custom `font-family: $font-headline` and hand-picked sizes (28–38px). Don't introduce new tokens for these one-offs.
 
 ### Focus rings
 
 Use `$green-light`-based rings for accessibility:
-- `$ring`: `0 0 0 2px rgba($green-light, 0.5)` — strong focus
-- `$ring-soft`: `0 0 0 3px rgba($green-light, 0.3)` — subtle focus
+- `$ring`: `0 0 0 2px rgba($green-light, 0.5)`
+- `$ring-soft`: `0 0 0 3px rgba($green-light, 0.3)`
 
-Or use the `focus-ring` mixin: `@include m.focus-ring;`
+Or apply via `@include m.focus-ring;`.
 
 ### Link color
 
-Always use `$green-light` for links (not `$green`, which is unreadable on dark backgrounds).
+Always use `$green-light` for links and text actions.
 
 ### Adding new components
 
 1. Create `src/components/YourComponent/YourComponent.scss`
 2. Import variables and mixins: `@use '../../styles/variables' as v;` and `@use '../../styles/mixins' as m;`
-3. Use `surface-tint` for background depth, `state-layer` for interactive elements, `input-field` for inputs
-4. Follow the button hierarchy above — pick the correct tier
-5. Use `rgba($white, 0.06)` for borders, never `$black`
-6. Use typography tokens, never hardcoded px
+3. Pick a surface tier via `surface-tint`, add `state-layer` to interactive elements, use `input-field` for inputs.
+4. Follow the button hierarchy — pick the correct tier.
+5. Use `rgba($outline-variant, 0.3)` for borders, never `$black`.
+6. Use typography tokens for UI; reach for explicit px only for display-size hero copy.
+7. Body text inherits `$font-body` (Inter). Reach for `$font-headline` (Space Grotesk) only for display-scale headings and editorial quote styling.
 
 ## Environment
 

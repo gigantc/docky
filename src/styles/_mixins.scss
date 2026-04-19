@@ -10,18 +10,19 @@
   padding: 0;
 }
 
-// M3 surface tinting — overlays accent light at varying alpha on black
+// Surface tiers — explicit warm-neutral palette (Emerald Dark v0.2.1)
 @mixin surface-tint($level) {
-  background-color: v.$black;
-
+  background-image: none;
   @if $level == 1 {
-    background-image: linear-gradient(rgba(var(--accent-light-rgb), 0.05), rgba(var(--accent-light-rgb), 0.05));
+    background-color: v.$surface-1;
   } @else if $level == 2 {
-    background-image: linear-gradient(rgba(var(--accent-light-rgb), 0.08), rgba(var(--accent-light-rgb), 0.08));
+    background-color: v.$surface-2;
   } @else if $level == 3 {
-    background-image: linear-gradient(rgba(var(--accent-light-rgb), 0.11), rgba(var(--accent-light-rgb), 0.11));
+    background-color: v.$surface-3;
   } @else if $level == 4 {
-    background-image: linear-gradient(rgba(var(--accent-light-rgb), 0.14), rgba(var(--accent-light-rgb), 0.14));
+    background-color: v.$surface-4;
+  } @else {
+    background-color: v.$black;
   }
 }
 
@@ -40,17 +41,9 @@
     transition: opacity v.$transition-fast;
   }
 
-  &:hover::before {
-    opacity: 0.08;
-  }
-
-  &:focus-visible::before {
-    opacity: 0.12;
-  }
-
-  &:active::before {
-    opacity: 0.12;
-  }
+  &:hover::before { opacity: 0.06; }
+  &:focus-visible::before { opacity: 0.1; }
+  &:active::before { opacity: 0.1; }
 }
 
 @mixin focus-ring {
@@ -61,26 +54,26 @@
   }
 }
 
-// M3 filled button
+// Primary filled button — bright emerald w/ dark green text
 @mixin button-filled {
-  padding: 10px 24px;
-  border-radius: v.$radius-pill;
+  padding: 10px 20px;
+  border-radius: v.$radius-m;
   border: none;
   cursor: pointer;
-  background: var(--accent);
-  color: v.$white;
-  font-size: v.$fs-base;
+  background: v.$green-light;
+  color: v.$on-primary;
+  font-family: v.$font-body;
+  font-size: v.$fs-sm;
   font-weight: v.$fw-bold;
-  box-shadow: v.$elevation-1;
+  letter-spacing: 0.02em;
+  transition: box-shadow v.$transition-normal, transform v.$transition-fast;
   @include state-layer;
 
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+  &:hover { box-shadow: 0 0 18px rgba(v.$green-light, 0.3); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
-// Minimal underline-only input (title fields, composers, search)
+// Minimal underline-only input (title fields, composers)
 @mixin input-underline {
   width: 100%;
   padding: 0 0 5px 0;
@@ -90,19 +83,18 @@
   background: none;
   color: v.$white;
   font-size: v.$fs-base;
+  font-family: v.$font-body;
   outline: none;
   transition: border-color v.$transition-normal;
 
-  &:focus {
-    border-bottom-color: var(--accent-light);
-  }
+  &:focus { border-bottom-color: v.$green-light; }
 }
 
 // Square icon button (toolbars, panels)
 @mixin icon-button {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: v.$radius-m;
   border: none;
   background: transparent;
   color: v.$white;
@@ -113,7 +105,7 @@
   @include state-layer;
 }
 
-// M3 filled input style
+// Filled input field
 @mixin input-field {
   width: 100%;
   padding: 10px 12px;
@@ -122,12 +114,13 @@
   border-bottom: 2px solid rgba(v.$white, 0.15);
   background: rgba(v.$white, 0.06);
   color: v.$white;
+  font-family: v.$font-body;
   font-size: v.$fs-base;
   outline: none;
   transition: border-color v.$transition-normal, background v.$transition-normal;
 
   &:focus {
-    border-bottom-color: var(--accent-light);
+    border-bottom-color: v.$green-light;
     background: rgba(v.$white, 0.08);
   }
 }

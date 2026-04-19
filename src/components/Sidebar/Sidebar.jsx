@@ -1,142 +1,82 @@
-import { forwardRef, memo, useLayoutEffect, useRef } from 'react'
-import { gsap } from 'gsap'
-import { BookOpen, FilePlus2, ListTodo, PanelLeft, PanelLeftClose } from 'lucide-react'
-import SearchBar from '../SearchBar/SearchBar'
-import DocList from '../DocList/DocList'
+import { memo } from 'react'
+import { BookOpen, Home as HomeIcon, ListTodo, Newspaper, Plus, Settings, StickyNote } from 'lucide-react'
 import './Sidebar.scss'
 
-const Sidebar = forwardRef(function Sidebar({
-  query,
-  onQueryChange,
-  filteredCount,
-  totalCount,
-  grouped,
-  filteredLists,
-  openSections,
-  onToggleSection,
-  activeDoc,
-  activeListId,
-  onSelectDoc,
-  onSelectList,
-  sidebarOpen,
-  onToggleSidebar,
-  onNewNote,
-  onNewList,
-  onNewJournal,
-}, searchRef) {
-  const contentRef = useRef(null)
-  const actionsRef = useRef(null)
+const NAV_ITEMS = [
+  { id: 'home', label: 'Home', Icon: HomeIcon },
+  { id: 'briefs', label: 'Briefs', Icon: Newspaper },
+  { id: 'notes', label: 'Notes', Icon: StickyNote },
+  { id: 'journals', label: 'Journals', Icon: BookOpen },
+  { id: 'lists', label: 'Lists', Icon: ListTodo },
+]
 
-  useLayoutEffect(() => {
-    const content = contentRef.current
-    if (!content) return
-
-    gsap.killTweensOf(content)
-
-    if (sidebarOpen) {
-      // Opening: delay content fade-in until sidebar has started expanding
-      gsap.fromTo(content,
-        { autoAlpha: 0, x: -8 },
-        { autoAlpha: 1, x: 0, duration: 0.25, delay: 0.1, ease: 'power2.out', overwrite: 'auto' },
-      )
-    } else {
-      // Closing: fade content out quickly before sidebar collapses
-      gsap.to(content, {
-        autoAlpha: 0, x: -8, duration: 0.15, ease: 'power2.in', overwrite: 'auto',
-      })
-    }
-  }, [sidebarOpen])
-
-  useLayoutEffect(() => {
-    const actions = actionsRef.current
-    if (!actions) return
-    const buttons = actions.querySelectorAll('.sidebar__action-btn')
-
-    gsap.killTweensOf(buttons)
-
-    if (sidebarOpen) {
-      gsap.fromTo(buttons,
-        { scale: 0.92, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.2, delay: 0.12, ease: 'power2.out', stagger: 0.03, overwrite: 'auto' },
-      )
-    } else {
-      // Buttons stay visible in collapsed state (stacked vertically) — just reset to full opacity
-      gsap.set(buttons, { scale: 1, opacity: 1, overwrite: 'auto' })
-    }
-  }, [sidebarOpen])
+function Sidebar({
+  view,
+  onViewChange,
+  onNewEntry,
+  sidebarMode = 'full', // 'full' | 'rail'
+}) {
+  const isRail = sidebarMode === 'rail'
 
   return (
-    <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : 'sidebar--collapsed'}`}>
-      <div className="sidebar__top">
-        <div
-          className={`sidebar__actions ${sidebarOpen ? 'sidebar__actions--row' : 'sidebar__actions--col'}`}
-          ref={actionsRef}
-        >
-          <button
-            className="sidebar__action-btn sidebar__action-btn--primary"
-            type="button"
-            onClick={onNewNote}
-            aria-label="New note"
-            data-tooltip="New note"
-          >
-            <FilePlus2 aria-hidden="true" size={16} strokeWidth={2} />
-          </button>
-          <button
-            className="sidebar__action-btn"
-            type="button"
-            onClick={onNewList}
-            aria-label="New list"
-            data-tooltip="New list"
-          >
-            <ListTodo aria-hidden="true" size={16} strokeWidth={2} />
-          </button>
-
-          <button
-            className="sidebar__action-btn"
-            type="button"
-            onClick={onNewJournal}
-            aria-label="New journal"
-            data-tooltip="New journal"
-          >
-            <BookOpen aria-hidden="true" size={16} strokeWidth={2} />
-          </button>
-        </div>
-
-        <button
-          className="sidebar__toggle"
-          type="button"
-          onClick={onToggleSidebar}
-          aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-          data-tooltip={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-        >
-          <PanelLeftClose className={`sidebar__toggle-icon ${sidebarOpen ? 'is-visible' : ''}`} aria-hidden="true" size={16} strokeWidth={2} />
-          <PanelLeft className={`sidebar__toggle-icon ${!sidebarOpen ? 'is-visible' : ''}`} aria-hidden="true" size={16} strokeWidth={2} />
-        </button>
+    <aside className={`sidebar ${isRail ? 'sidebar--rail' : 'sidebar--full'}`}>
+      <div className="sidebar__brand">
+        {isRail
+          ? <span className="sidebar__brand-mark">D.</span>
+          : (
+            <>
+              <div className="sidebar__brand-title">The Dock</div>
+              <div className="sidebar__brand-sub">dFree x Apollo</div>
+            </>
+          )}
       </div>
 
-      <div className="sidebar__content" ref={contentRef}>
-        <SearchBar
-          ref={searchRef}
-          query={query}
-          onQueryChange={onQueryChange}
-          filteredCount={filteredCount}
-          totalCount={totalCount}
-        />
-        <DocList
-          grouped={grouped}
-          filteredLists={filteredLists}
-          filteredCount={filteredCount}
-          openSections={openSections}
-          onToggleSection={onToggleSection}
-          activeDoc={activeDoc}
-          activeListId={activeListId}
-          query={query}
-          onSelectDoc={onSelectDoc}
-          onSelectList={onSelectList}
-        />
+      <nav className="sidebar__nav">
+        {NAV_ITEMS.map((item) => {
+          const isActive = view === item.id
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={`sidebar__nav-item ${isActive ? 'is-active' : ''}`}
+              onClick={() => onViewChange?.(item.id)}
+              data-tooltip={isRail ? item.label : undefined}
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <item.Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+              <span className="sidebar__nav-label">{item.label}</span>
+            </button>
+          )
+        })}
+      </nav>
+
+      <div className="sidebar__footer">
+        {!isRail && (
+          <button
+            type="button"
+            className="sidebar__new"
+            onClick={onNewEntry}
+            data-tooltip="New entry"
+          >
+            <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
+            <span className="sidebar__nav-label">New Entry</span>
+          </button>
+        )}
+
+        <button
+          type="button"
+          className="sidebar__nav-item"
+          disabled
+          data-tooltip={isRail ? 'Settings (coming soon)' : undefined}
+          aria-label="Settings"
+        >
+          <Settings size={16} strokeWidth={1.8} aria-hidden="true" />
+          <span className="sidebar__nav-label">Settings</span>
+        </button>
       </div>
     </aside>
   )
-})
+}
 
 export default memo(Sidebar)

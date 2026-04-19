@@ -21,27 +21,29 @@
 .modal__backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(v.$black, 0.72);
+  background: rgba(#000, 0.72);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  z-index: 100;
+  backdrop-filter: blur(4px);
 }
 
 .modal {
-  @include m.surface-tint(2);
-  border: 1px solid rgba(v.$white, 0.06);
+  background: v.$surface-2;
+  border: 1px solid rgba(v.$outline-variant, 0.3);
   border-radius: v.$radius-l;
   padding: 20px 24px;
-  width: 320px;
+  width: 360px;
   color: v.$white;
   box-shadow: v.$elevation-2;
 }
 
 .modal__title {
-  font-weight: v.$fw-bold;
-  font-size: v.$fs-md;
-  margin-bottom: 10px;
+  font-family: v.$font-headline;
+  font-weight: v.$fw-medium;
+  font-size: v.$fs-lg;
+  margin-bottom: 12px;
 }
 
 .modal__actions {
@@ -58,65 +60,72 @@
 .modal__button--ghost {
   background: transparent;
   border: none;
-  color: var(--accent-light);
+  color: v.$green-light;
   box-shadow: none;
   padding: 10px 12px;
 }
 
 .modal__button--danger {
-  background: v.$danger;
+  background: transparent;
+  border: 1px solid rgba(v.$danger, 0.45);
+  color: v.$danger;
 }
 
+// Home view: full-width sidebar + main content
 .app {
-  --sidebar-width: 320px;
-  --sidebar-panel-width: 320px;
+  --sidebar-width: 240px;
   display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr 280px;
+  grid-template-columns: var(--sidebar-width) [viewer-start] 1fr;
   grid-template-rows: auto 1fr;
   grid-template-areas:
-    'header header header'
-    'sidebar viewer rightbar';
+    'header header'
+    'sidebar viewer';
   height: 100vh;
   min-height: 0;
   overflow: hidden;
+
+  .rightbar { display: none; }
 }
 
-@media (max-width: 1100px) {
-  .app {
-    grid-template-columns: var(--sidebar-width) 1fr;
-    grid-template-areas:
-      'header header'
-      'sidebar viewer';
-  }
-
-  .rightbar {
-    display: none;
-  }
+// Archive views: rail sidebar + selection panel + main
+.app--archive {
+  --rail-width: 64px;
+  --panel-width: 280px;
+  grid-template-columns: var(--rail-width) var(--panel-width) [viewer-start] 1fr;
+  grid-template-areas:
+    'header header header'
+    'sidebar panel viewer';
 }
 
 @media (max-width: 900px) {
-  .app {
-    --sidebar-width: 42px;
-    --sidebar-panel-width: 280px;
-    grid-template-columns: var(--sidebar-width) 1fr;
-    grid-template-areas:
-      'header header'
-      'sidebar viewer';
-    height: 100vh;
-    overflow: hidden;
+  .app--archive {
+    --panel-width: 220px;
   }
-
-  .app-header {
-    flex-wrap: nowrap;
-  }
-
-  .viewer {
-    transition: transform 0.3s v.$easing-standard;
-  }
-
-  .sidebar.sidebar--open ~ .viewer {
-    transform: translateX(calc(var(--sidebar-panel-width) - var(--sidebar-width)));
-  }
-
 }
 
+.archive-empty {
+  grid-area: viewer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+.archive-empty__card {
+  text-align: center;
+  max-width: 360px;
+
+  h2 {
+    font-family: v.$font-headline;
+    font-size: 24px;
+    font-weight: v.$fw-medium;
+    margin: 0 0 8px;
+  }
+
+  p {
+    color: v.$muted;
+    font-size: v.$fs-sm;
+    margin: 0;
+  }
+}

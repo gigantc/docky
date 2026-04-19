@@ -1,0 +1,79 @@
+@use '../../styles/variables' as v;
+@use '../../styles/mixins' as m;
+
+.new-entry {
+  background: v.$surface-2;
+  border: 1px solid rgba(v.$outline-variant, 0.3);
+  border-radius: v.$radius-l;
+  padding: 24px;
+  width: 440px;
+  max-width: calc(100vw - 40px);
+  box-shadow: v.$elevation-2;
+  color: v.$white;
+}
+
+.new-entry__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.new-entry__eyebrow {
+  color: v.$green-light;
+  font-size: 10px;
+  font-weight: v.$fw-bold;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.new-entry__title {
+  font-family: v.$font-headline;
+  font-size: 24px;
+  font-weight: v.$fw-medium;
+  margin: 4px 0 0;
+}
+
+.new-entry__close {
+  @include m.icon-button;
+  color: v.$muted;
+}
+
+.new-entry__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-entry__option {
+  @include m.button-reset;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: v.$surface-1;
+  border: 1px solid rgba(v.$outline-variant, 0.3);
+  border-radius: v.$radius-m;
+  color: v.$white;
+  text-align: left;
+  cursor: pointer;
+  transition: background v.$transition-fast, border-color v.$transition-fast;
+
+  svg { color: v.$green-light; flex-shrink: 0; }
+
+  &:hover {
+    background: v.$surface-3;
+    border-color: rgba(v.$green-light, 0.3);
+  }
+}
+
+.new-entry__option-label {
+  font-size: v.$fs-base;
+  font-weight: v.$fw-semi;
+}
+
+.new-entry__option-desc {
+  font-size: v.$fs-xs;
+  color: v.$muted;
+  margin-top: 2px;
+}
