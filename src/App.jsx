@@ -21,7 +21,14 @@ import { renderMarkdownWithOutline } from './utils/markdown'
 import { richDocToHtml } from './utils/richText'
 import { formatDate } from './utils/date'
 import { createId, sortDocs } from './utils/helpers'
-import { DEFAULT_LOCATION_ID, getLocationById } from './utils/locations'
+import {
+  DEFAULT_LOCATION_ID,
+  createLocationId,
+  getLocationById,
+  loadLocations,
+  saveLocations,
+} from './utils/locations'
+import { geocodeLocation } from './utils/weather'
 import NewListModal from './components/NewListModal/NewListModal'
 import NewEntryModal from './components/NewEntryModal/NewEntryModal'
 import SettingsModal from './components/SettingsModal/SettingsModal'
@@ -62,6 +69,7 @@ export default function App() {
   const [listSaving, setListSaving] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('dock.theme') || 'green')
+  const [locations, setLocations] = useState(() => loadLocations())
   const [locationId, setLocationId] = useState(() => localStorage.getItem('dock.location') || DEFAULT_LOCATION_ID)
   const [autoEditDocId, setAutoEditDocId] = useState(null)
   const appRef = useRef(null)
@@ -78,6 +86,38 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('dock.location', locationId)
+  }, [locationId])
+
+  useEffect(() => {
+    saveLocations(locations)
+  }, [locations])
+
+  const handleAddLocation = useCallback(async (query) => {
+    const trimmed = query.trim()
+    if (!trimmed) return { error: 'Enter a city to add.' }
+    try {
+      const hit = await geocodeLocation(trimmed)
+      if (!hit) return { error: `No results for "${trimmed}".` }
+      const id = createLocationId(hit.name)
+      const next = { id, name: hit.name, lat: hit.lat, lon: hit.lon }
+      setLocations((prev) => (
+        prev.some((loc) => loc.name.toLowerCase() === next.name.toLowerCase())
+          ? prev
+          : [...prev, next]
+      ))
+      setLocationId(id)
+      return { ok: true }
+    } catch (error) {
+      return { error: error?.message || 'Lookup failed.' }
+    }
+  }, [])
+
+  const handleDeleteLocation = useCallback((id) => {
+    setLocations((prev) => {
+      const next = prev.filter((loc) => loc.id !== id)
+      if (id === locationId && next.length > 0) setLocationId(next[0].id)
+      return next
+    })
   }, [locationId])
 
   useEffect(() => {
@@ -494,8 +534,11 @@ export default function App() {
         <SettingsModal
           theme={theme}
           onThemeChange={setTheme}
+          locations={locations}
           locationId={locationId}
           onLocationChange={setLocationId}
+          onAddLocation={handleAddLocation}
+          onDeleteLocation={handleDeleteLocation}
           onClose={() => setShowSettings(false)}
         />
       )}
@@ -544,7 +587,7 @@ export default function App() {
           docs={filteredDocs}
           lists={filteredLists}
           user={user}
-          location={getLocationById(locationId)}
+          location={getLocationById(locations, locationId)}
           onSelectDoc={handleSelectDoc}
           onSelectList={handleSelectList}
           onNewEntry={(type) => {

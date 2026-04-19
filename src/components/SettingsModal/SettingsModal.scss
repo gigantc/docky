@@ -8,6 +8,8 @@
   padding: 24px;
   width: 440px;
   max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
   box-shadow: v.$elevation-2;
   color: v.$white;
 }
@@ -97,8 +99,25 @@
   gap: 8px;
 }
 
+.settings__empty {
+  padding: 12px 14px;
+  color: v.$muted;
+  font-size: v.$fs-sm;
+  font-style: italic;
+  background: v.$surface-1;
+  border: 1px dashed rgba(v.$outline-variant, 0.3);
+  border-radius: v.$radius-m;
+}
+
+.settings__location-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
 .settings__location {
   @include m.button-reset;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -120,6 +139,77 @@
     border-color: var(--primary);
     background: rgba(var(--primary-rgb), 0.08);
   }
+}
+
+.settings__location-delete {
+  @include m.button-reset;
+  width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(v.$outline-variant, 0.3);
+  border-radius: v.$radius-m;
+  color: v.$muted;
+  cursor: pointer;
+  transition: background v.$transition-fast, color v.$transition-fast, border-color v.$transition-fast;
+
+  &:hover:not(:disabled) {
+    color: v.$danger;
+    border-color: rgba(v.$danger, 0.45);
+    background: rgba(v.$danger, 0.06);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.settings__location-add {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+
+  input {
+    flex: 1;
+    background: v.$surface-1;
+    border: 1px solid rgba(v.$outline-variant, 0.3);
+    border-radius: v.$radius-m;
+    color: v.$white;
+    font-family: v.$font-body;
+    font-size: v.$fs-sm;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color v.$transition-fast;
+
+    &::placeholder { color: v.$muted; opacity: 0.7; }
+    &:focus { border-color: rgba(var(--primary-rgb), 0.6); }
+  }
+
+  button {
+    @include m.button-reset;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--primary);
+    color: var(--on-primary);
+    padding: 0 14px;
+    border-radius: v.$radius-m;
+    font-size: v.$fs-sm;
+    font-weight: v.$fw-bold;
+    cursor: pointer;
+    transition: box-shadow v.$transition-normal;
+
+    &:hover:not(:disabled) { box-shadow: 0 0 18px rgba(var(--primary-rgb), 0.3); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+}
+
+.settings__location-error {
+  margin-top: 8px;
+  font-size: v.$fs-xs;
+  color: v.$danger;
 }
 
 .settings__location-name {
