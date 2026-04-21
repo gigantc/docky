@@ -34,6 +34,8 @@ function formatRelative(iso) {
 }
 
 function textFromDoc(doc) {
+  if (doc.briefData?.intro) return doc.briefData.intro
+  if (doc.briefData?.greeting) return doc.briefData.greeting
   // Prefer raw markdown content; strip heading/markdown noise for a single-line snippet.
   const raw = doc.content || ''
   return raw.replace(/^#+\s.*$/gm, '').replace(/\s+/g, ' ').trim().slice(0, 140)
@@ -126,7 +128,7 @@ export default function Home({
             <span className="home__chip">High Signal</span>
             <h2 className="home__featured-title">{featuredBrief.title}</h2>
             <p className="home__featured-excerpt">
-              {buildSnippet(featuredBrief.content, featuredBrief.title, 260) || textFromDoc(featuredBrief)}
+              {featuredBrief.briefData?.intro || buildSnippet(featuredBrief.content, featuredBrief.title, 260) || textFromDoc(featuredBrief)}
             </p>
             <span className="home__featured-cta">
               Read Full Analysis

@@ -18,6 +18,7 @@ import {
 } from './firebase'
 import { extractInlineTags, uniqueTags } from './utils/tags'
 import { renderMarkdownWithOutline } from './utils/markdown'
+import { createEmptyMorningBrief, getBriefMarketMap, getMorningBriefOutline, parseMorningBrief, serializeBriefData } from './utils/morningBrief'
 import { richDocToHtml } from './utils/richText'
 import { formatDate } from './utils/date'
 import { createId, sortDocs } from './utils/helpers'
@@ -146,13 +147,15 @@ export default function App() {
         const title = data.title || 'Untitled'
         const created = formatDate(data.createdAt?.toDate?.() || data.createdAt)
         const updated = formatDate(data.updatedAt?.toDate?.() || data.updatedAt)
+        const type = data.type || 'note'
+        const parsedBrief = type === 'brief' ? parseMorningBrief(content) : null
         const markdownRendered = renderMarkdownWithOutline(content)
         const html = contentJson ? richDocToHtml(contentJson) : markdownRendered.html
-        const outline = contentJson ? [] : markdownRendered.outline
+        const outline = parsedBrief?.briefData ? getMorningBriefOutline(parsedBrief.briefData) : contentJson ? [] : markdownRendered.outline
         const frontTags = Array.isArray(data.tags) ? data.tags : []
         const inlineTags = extractInlineTags(content)
-        const tags = uniqueTags([...frontTags, ...inlineTags])
-        const type = data.type || 'note'
+        const briefData = data.briefData || parsedBrief?.briefData || null
+        const tags = uniqueTags([...frontTags, ...inlineTags, ...(briefData?.tags || [])])
         const isJournal = type === 'journal'
         const isBrief = type === 'brief'
 
@@ -167,6 +170,7 @@ export default function App() {
           html,
           outline,
           tags,
+          briefData,
           rawTags: frontTags,
           isJournal,
           isBrief,
@@ -210,11 +214,16 @@ export default function App() {
   const createDocument = async (type, { title, tags = [] } = {}) => {
     if (!user) return
     const docTitle = title || 'Untitled'
+    const briefData = type === 'brief' ? createEmptyMorningBrief() : null
+    const content = type === 'brief' ? serializeBriefData(briefData) : ''
     const docRef = await addDoc(collection(db, 'notes'), {
       title: docTitle,
-      content: '',
+      content,
       contentJson: { type: 'doc', content: [{ type: 'paragraph' }] },
       tags,
+      briefData,
+      briefDate: briefData?.date || null,
+      briefTemplate: briefData?.template || null,
       type,
       isDraft: true,
       createdAt: serverTimestamp(),
@@ -242,11 +251,17 @@ export default function App() {
 
   const handleUpdateNoteInline = async (docItem, { title, content, contentJson, tags }) => {
     if (!docItem?.id) return
+    const parsedBrief = docItem.isBrief ? parseMorningBrief(content || '') : null
+    const briefData = parsedBrief?.briefData || null
+    const nextTags = Array.isArray(tags) ? tags : []
     await updateDoc(doc(db, 'notes', docItem.id), {
       title: title?.trim() || 'Untitled',
       content: content || '',
       contentJson: contentJson || null,
-      tags: Array.isArray(tags) ? tags : [],
+      tags: nextTags,
+      briefData,
+      briefDate: briefData?.date || null,
+      briefTemplate: briefData?.template || null,
       updatedAt: serverTimestamp(),
       isDraft: false,
     })
@@ -464,6 +479,23 @@ export default function App() {
     return variants[index]
   }, [activeDoc])
 
+  const briefCompare = useMemo(() => {
+    if (!activeDoc?.isBrief) return null
+
+    const todayIndex = docs.findIndex((docItem) => docItem.id === activeDoc.id)
+    if (todayIndex === -1) return null
+
+    const yesterday = docs.slice(todayIndex + 1).find((docItem) => docItem.isBrief && docItem.id !== activeDoc.id)
+    if (!yesterday) return null
+
+    return {
+      today: activeDoc,
+      yesterday,
+      todayMarkets: getBriefMarketMap(activeDoc.briefData),
+      yesterdayMarkets: getBriefMarketMap(yesterday.briefData),
+    }
+  }, [activeDoc, docs])
+
   const viewForDoc = useCallback((docItem) => {
     if (!docItem) return 'notes'
     if (docItem.isBrief) return 'briefs'
@@ -603,6 +635,7 @@ export default function App() {
           activeList={activeList}
           activeDoc={activeDoc}
           listStats={listStats}
+          briefCompare={briefCompare}
           briefGreeting={briefGreeting}
           user={user}
           autoEditDocId={autoEditDocId}

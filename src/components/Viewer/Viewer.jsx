@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react'
 import DocumentView from '../DocumentView/DocumentView'
 import ListView from '../ListView/ListView'
+import MorningBriefView from '../MorningBriefView/MorningBriefView'
 import './Viewer.scss'
 
 export default function Viewer({
   activeList,
   activeDoc,
   listStats,
+  briefCompare,
   briefGreeting,
   user,
   autoEditDocId,
@@ -49,16 +51,24 @@ export default function Viewer({
   if (activeDoc) {
     return (
       <main ref={viewerRef} className="viewer">
-        <DocumentView
-          activeDoc={activeDoc}
-          briefGreeting={briefGreeting}
-          user={user}
-          onSave={onSaveDoc}
-          onDiscardNew={onDiscardNewDoc}
-          onRequestDiscardNew={onRequestDiscardNewDoc}
-          onDelete={onDeleteDoc}
-          autoStartEdit={autoEditDocId === activeDoc?.id}
-        />
+        {activeDoc.isBrief && activeDoc.briefData ? (
+          <MorningBriefView
+            activeDoc={activeDoc}
+            briefGreeting={briefGreeting}
+            briefCompare={briefCompare}
+          />
+        ) : (
+          <DocumentView
+            activeDoc={activeDoc}
+            briefGreeting={briefGreeting}
+            user={user}
+            onSave={onSaveDoc}
+            onDiscardNew={onDiscardNewDoc}
+            onRequestDiscardNew={onRequestDiscardNewDoc}
+            onDelete={onDeleteDoc}
+            autoStartEdit={autoEditDocId === activeDoc?.id}
+          />
+        )}
       </main>
     )
   }
