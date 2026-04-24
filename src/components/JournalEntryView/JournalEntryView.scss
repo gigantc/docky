@@ -1,0 +1,26 @@
+@use '../../styles/variables' as v;
+
+.journal-entry__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  color: var(--primary);
+  font-family: v.$font-body;
+  font-size: v.$fs-xs;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.journal-entry__sep {
+  color: v.$muted;
+  opacity: 0.6;
+}
+
+.journal-entry__crumb {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

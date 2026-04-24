@@ -2,11 +2,14 @@ import { useEffect, useRef } from 'react'
 import DocumentView from '../DocumentView/DocumentView'
 import ListView from '../ListView/ListView'
 import MorningBriefView from '../MorningBriefView/MorningBriefView'
+import JournalEntryView from '../JournalEntryView/JournalEntryView'
 import './Viewer.scss'
 
 export default function Viewer({
   activeList,
   activeDoc,
+  activeEntry,
+  activeJournal,
   listStats,
   briefCompare,
   briefGreeting,
@@ -16,6 +19,10 @@ export default function Viewer({
   onDiscardNewDoc,
   onRequestDiscardNewDoc,
   onDeleteDoc,
+  onSaveEntry,
+  onDiscardNewEntry,
+  onRequestDiscardNewEntry,
+  onDeleteEntry,
   onAddListItem,
   onToggleListItem,
   onDeleteListItem,
@@ -28,7 +35,24 @@ export default function Viewer({
 
   useEffect(() => {
     if (viewerRef.current) viewerRef.current.scrollTop = 0
-  }, [activeList?.id, activeDoc?.id])
+  }, [activeList?.id, activeDoc?.id, activeEntry?.id])
+
+  if (activeEntry) {
+    return (
+      <main ref={viewerRef} className="viewer">
+        <JournalEntryView
+          entry={activeEntry}
+          journal={activeJournal}
+          user={user}
+          onSave={onSaveEntry}
+          onDiscardNew={onDiscardNewEntry}
+          onRequestDiscardNew={onRequestDiscardNewEntry}
+          onDelete={onDeleteEntry}
+          autoStartEdit={autoEditDocId === activeEntry?.id}
+        />
+      </main>
+    )
+  }
 
   if (activeList) {
     return (

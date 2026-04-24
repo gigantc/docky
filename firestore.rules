@@ -16,6 +16,20 @@ service cloud.firestore {
       allow read, write: if signedIn();
     }
 
+    // Journals: top-level journal docs + nested entries subcollection
+    match /journals/{journalId} {
+      allow read, write: if signedIn();
+
+      match /entries/{entryId} {
+        allow read, write: if signedIn();
+      }
+    }
+
+    // Allow collectionGroup('entries') queries across all journals
+    match /{path=**}/entries/{entryId} {
+      allow read: if signedIn();
+    }
+
     // deny everything else by default
     match /{document=**} {
       allow read, write: if false;

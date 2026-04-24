@@ -7,6 +7,7 @@ import {
   db,
   onAuthStateChanged,
   collection,
+  collectionGroup,
   addDoc,
   doc,
   updateDoc,
@@ -17,6 +18,7 @@ import {
   fsQuery,
   serverTimestamp,
   where,
+  writeBatch,
 } from './firebase'
 import { extractInlineTags, uniqueTags } from './utils/tags'
 import { renderMarkdownWithOutline } from './utils/markdown'
@@ -69,6 +71,11 @@ const EMPTY_STATE_COPY = {
 export default function App() {
   const [firestoreDocs, setFirestoreDocs] = useState([])
   const [firestoreLists, setFirestoreLists] = useState([])
+  const [firestoreJournals, setFirestoreJournals] = useState([])
+  const [firestoreEntries, setFirestoreEntries] = useState([])
+  const [journalsReady, setJournalsReady] = useState(false)
+  const [entriesReady, setEntriesReady] = useState(false)
+  const [activeEntryId, setActiveEntryId] = useState(null)
   const docs = useMemo(() => sortDocs(firestoreDocs), [firestoreDocs])
   const [query, setQuery] = useState('')
   const [view, setView] = useState('home')
@@ -206,6 +213,57 @@ export default function App() {
 
   useEffect(() => {
     if (!user) {
+      setFirestoreJournals([])
+      setJournalsReady(false)
+      return undefined
+    }
+
+    const journalsQuery = fsQuery(collection(db, 'journals'), orderBy('updatedAt', 'desc'))
+    return onSnapshot(journalsQuery, (snapshot) => {
+      setJournalsReady(true)
+      const nextJournals = snapshot.docs.map((snap) => {
+        const data = snap.data() || {}
+        return {
+          id: snap.id,
+          title: data.title || 'Untitled Journal',
+          createdAt: data.createdAt?.toDate?.() || data.createdAt || null,
+          updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || null,
+        }
+      })
+      setFirestoreJournals(nextJournals)
+    })
+  }, [user])
+
+  useEffect(() => {
+    if (!user) {
+      setFirestoreEntries([])
+      setEntriesReady(false)
+      return undefined
+    }
+
+    const entriesQuery = fsQuery(collectionGroup(db, 'entries'), orderBy('createdAt', 'desc'))
+    return onSnapshot(entriesQuery, (snapshot) => {
+      setEntriesReady(true)
+      const nextEntries = snapshot.docs.map((snap) => {
+        const data = snap.data() || {}
+        const journalId = snap.ref.parent.parent?.id || null
+        return {
+          id: snap.id,
+          journalId,
+          title: data.title || 'Untitled Entry',
+          chapter: (data.chapter || '').trim() || 'General',
+          content: data.content || '',
+          contentJson: data.contentJson || null,
+          createdAt: data.createdAt?.toDate?.() || data.createdAt || null,
+          updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || null,
+        }
+      })
+      setFirestoreEntries(nextEntries)
+    })
+  }, [user])
+
+  useEffect(() => {
+    if (!user) {
       setFirestoreLists([])
       setListsReady(false)
       return undefined
@@ -261,9 +319,131 @@ export default function App() {
 
   const handleCreateNote = () => createDocument('note')
 
-  const handleCreateJournal = () => {
-    const today = new Date().toISOString().slice(0, 10)
-    return createDocument('journal', { title: `Daily Journal — ${today}`, tags: ['journal'] })
+  const handleCreateJournal = async () => {
+    if (!user) return
+    const journalRef = await addDoc(collection(db, 'journals'), {
+      title: 'New Journal',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+    const entryRef = await addDoc(collection(db, 'journals', journalRef.id, 'entries'), {
+      title: 'New Entry',
+      chapter: 'General',
+      content: '',
+      contentJson: { type: 'doc', content: [{ type: 'paragraph' }] },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+    setAutoEditDocId(entryRef.id)
+    setActiveEntryId(entryRef.id)
+    setActivePath(null)
+    setActiveListId(null)
+    setView('journals')
+  }
+
+  const handleCreateEntry = async (journalId, chapter = 'General') => {
+    if (!user || !journalId) return
+    const entryRef = await addDoc(collection(db, 'journals', journalId, 'entries'), {
+      title: 'New Entry',
+      chapter: chapter || 'General',
+      content: '',
+      contentJson: { type: 'doc', content: [{ type: 'paragraph' }] },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+    await updateDoc(doc(db, 'journals', journalId), { updatedAt: serverTimestamp() })
+    setAutoEditDocId(entryRef.id)
+    setActiveEntryId(entryRef.id)
+    setActivePath(null)
+    setActiveListId(null)
+    setView('journals')
+  }
+
+  const handleUpdateEntry = async (entry, { title, chapter, content, contentJson }) => {
+    if (!entry?.id || !entry.journalId) return
+    await updateDoc(doc(db, 'journals', entry.journalId, 'entries', entry.id), {
+      title: title?.trim() || 'Untitled Entry',
+      chapter: (chapter || '').trim() || 'General',
+      content: content || '',
+      contentJson: contentJson || null,
+      updatedAt: serverTimestamp(),
+    })
+    await updateDoc(doc(db, 'journals', entry.journalId), { updatedAt: serverTimestamp() })
+    if (autoEditDocId === entry.id) setAutoEditDocId(null)
+  }
+
+  const handleDeleteEntry = async (entry) => {
+    if (!entry?.id || !entry.journalId) return
+    await deleteDoc(doc(db, 'journals', entry.journalId, 'entries', entry.id))
+    await updateDoc(doc(db, 'journals', entry.journalId), { updatedAt: serverTimestamp() })
+    if (activeEntryId === entry.id) setActiveEntryId(null)
+  }
+
+  const handleDiscardNewEntry = async (entry) => {
+    if (!entry?.id || !entry.journalId) return
+    await deleteDoc(doc(db, 'journals', entry.journalId, 'entries', entry.id))
+    if (autoEditDocId === entry.id) setAutoEditDocId(null)
+    if (activeEntryId === entry.id) setActiveEntryId(null)
+  }
+
+  const requestDiscardNewEntry = (entry) => {
+    openConfirmDialog({
+      title: 'Discard new entry?',
+      body: <>Discard <strong>{entry?.title || 'Untitled'}</strong>? Unsaved changes will be lost.</>,
+      confirmLabel: 'Discard',
+      onConfirm: () => handleDiscardNewEntry(entry),
+    })
+  }
+
+  const handleRenameJournal = async (journalId, title) => {
+    if (!journalId) return
+    await updateDoc(doc(db, 'journals', journalId), {
+      title: title?.trim() || 'Untitled Journal',
+      updatedAt: serverTimestamp(),
+    })
+  }
+
+  const handleRenameChapter = async (journalId, oldName, newName) => {
+    const next = (newName || '').trim() || 'General'
+    if (!journalId || !oldName || next === oldName) return
+    const affected = firestoreEntries.filter(
+      (entry) => entry.journalId === journalId && entry.chapter === oldName,
+    )
+    if (affected.length === 0) return
+    const batch = writeBatch(db)
+    affected.forEach((entry) => {
+      batch.update(doc(db, 'journals', journalId, 'entries', entry.id), {
+        chapter: next,
+        updatedAt: serverTimestamp(),
+      })
+    })
+    batch.update(doc(db, 'journals', journalId), { updatedAt: serverTimestamp() })
+    await batch.commit()
+  }
+
+  const handleDeleteJournal = async (journal) => {
+    if (!journal?.id) return
+    const entriesSnap = await getDocs(collection(db, 'journals', journal.id, 'entries'))
+    const batch = writeBatch(db)
+    entriesSnap.docs.forEach((snap) => batch.delete(snap.ref))
+    batch.delete(doc(db, 'journals', journal.id))
+    await batch.commit()
+    if (activeJournal?.id === journal.id) setActiveEntryId(null)
+  }
+
+  const handleDeleteChapter = async (journalId, chapterName) => {
+    if (!journalId || !chapterName) return
+    const affected = firestoreEntries.filter(
+      (entry) => entry.journalId === journalId && entry.chapter === chapterName,
+    )
+    if (affected.length === 0) return
+    const batch = writeBatch(db)
+    affected.forEach((entry) => {
+      batch.delete(doc(db, 'journals', journalId, 'entries', entry.id))
+    })
+    batch.update(doc(db, 'journals', journalId), { updatedAt: serverTimestamp() })
+    await batch.commit()
+    if (affected.some((entry) => entry.id === activeEntryId)) setActiveEntryId(null)
   }
 
   const handleNewEntrySelect = (type) => {
@@ -481,6 +661,39 @@ export default function App() {
     [firestoreLists, activeListId],
   )
 
+  const journalTree = useMemo(() => {
+    const entriesByJournal = new Map()
+    firestoreEntries.forEach((entry) => {
+      if (!entry.journalId) return
+      const bucket = entriesByJournal.get(entry.journalId) || []
+      bucket.push(entry)
+      entriesByJournal.set(entry.journalId, bucket)
+    })
+
+    return firestoreJournals.map((journal) => {
+      const entries = entriesByJournal.get(journal.id) || []
+      const chapters = new Map()
+      entries.forEach((entry) => {
+        const list = chapters.get(entry.chapter) || []
+        list.push(entry)
+        chapters.set(entry.chapter, list)
+      })
+      const chapterList = Array.from(chapters.entries())
+        .map(([name, items]) => ({ name, entries: items }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+      return { ...journal, entries, chapters: chapterList }
+    })
+  }, [firestoreJournals, firestoreEntries])
+
+  const activeEntry = useMemo(
+    () => firestoreEntries.find((entry) => entry.id === activeEntryId) || null,
+    [firestoreEntries, activeEntryId],
+  )
+  const activeJournal = useMemo(
+    () => (activeEntry ? firestoreJournals.find((j) => j.id === activeEntry.journalId) : null) || null,
+    [firestoreJournals, activeEntry],
+  )
+
   const listStats = useMemo(() => {
     if (!activeList) return null
     const total = activeList.items?.length || 0
@@ -531,6 +744,7 @@ export default function App() {
     setAutoEditDocId(null)
     setActivePath(path)
     setActiveListId(null)
+    setActiveEntryId(null)
     const docItem = docs.find((d) => d.path === path)
     if (docItem) setView(viewForDoc(docItem))
   }, [docs, viewForDoc])
@@ -539,17 +753,27 @@ export default function App() {
     setAutoEditDocId(null)
     setActiveListId(id)
     setActivePath(null)
+    setActiveEntryId(null)
     setView('lists')
+  }, [])
+
+  const handleSelectEntry = useCallback((entryId) => {
+    setAutoEditDocId(null)
+    setActiveEntryId(entryId)
+    setActivePath(null)
+    setActiveListId(null)
+    setView('journals')
   }, [])
 
   const handleViewChange = useCallback((nextView) => {
     setView(nextView)
     setActivePath(null)
     setActiveListId(null)
+    setActiveEntryId(null)
     setAutoEditDocId(null)
   }, [])
 
-  const appLoading = !authReady || (user && (!docsReady || !listsReady))
+  const appLoading = !authReady || (user && (!docsReady || !listsReady || !journalsReady || !entriesReady))
 
   if (appLoading) return (
     <div className="app-loader">
@@ -563,7 +787,7 @@ export default function App() {
   if (!user) return <LoginPage />
 
   const isArchive = ARCHIVE_VIEWS.has(view)
-  const hasSelection = isArchive && (activeDoc || activeList)
+  const hasSelection = isArchive && (activeDoc || activeList || activeEntry)
   const appClass = `app ${isArchive ? 'app--archive' : 'app--home'}`
   const emptyCopy = EMPTY_STATE_COPY[view] || EMPTY_STATE_COPY.notes
 
@@ -625,10 +849,28 @@ export default function App() {
           type={view}
           docs={docs}
           lists={firestoreLists}
+          journalTree={journalTree}
           activePath={activePath}
           activeListId={activeListId}
+          activeEntryId={activeEntryId}
           onSelectDoc={handleSelectDoc}
           onSelectList={handleSelectList}
+          onSelectEntry={handleSelectEntry}
+          onAddEntry={(journalId, chapter) => handleCreateEntry(journalId, chapter)}
+          onRenameJournal={handleRenameJournal}
+          onRenameChapter={handleRenameChapter}
+          onDeleteJournal={(journal) => openConfirmDialog({
+            title: 'Delete journal?',
+            body: <>Delete <strong>{journal?.title || 'Untitled'}</strong> and all its entries? This cannot be undone.</>,
+            confirmLabel: 'Delete Journal',
+            onConfirm: () => handleDeleteJournal(journal),
+          })}
+          onDeleteChapter={(journalId, chapterName, entryCount) => openConfirmDialog({
+            title: 'Delete chapter?',
+            body: <>Delete <strong>{chapterName}</strong>? This removes {entryCount} {entryCount === 1 ? 'entry' : 'entries'}. Cannot be undone.</>,
+            confirmLabel: 'Delete Chapter',
+            onConfirm: () => handleDeleteChapter(journalId, chapterName),
+          })}
           onNew={() => {
             if (view === 'notes') handleCreateNote()
             else if (view === 'journals') handleCreateJournal()
@@ -658,6 +900,8 @@ export default function App() {
         <Viewer
           activeList={activeList}
           activeDoc={activeDoc}
+          activeEntry={activeEntry}
+          activeJournal={activeJournal}
           listStats={listStats}
           briefCompare={briefCompare}
           briefGreeting={briefGreeting}
@@ -671,6 +915,15 @@ export default function App() {
             body: <>Delete <strong>{docItem?.title || 'Untitled'}</strong>? This cannot be undone.</>,
             confirmLabel: docItem?.isBrief ? 'Delete Brief' : 'Delete Note',
             onConfirm: () => handleDeleteNoteInline(docItem),
+          })}
+          onSaveEntry={handleUpdateEntry}
+          onDiscardNewEntry={handleDiscardNewEntry}
+          onRequestDiscardNewEntry={requestDiscardNewEntry}
+          onDeleteEntry={(entry) => openConfirmDialog({
+            title: 'Delete entry?',
+            body: <>Delete <strong>{entry?.title || 'Untitled'}</strong>? This cannot be undone.</>,
+            confirmLabel: 'Delete Entry',
+            onConfirm: () => handleDeleteEntry(entry),
           })}
           onAddListItem={handleAddListItem}
           onToggleListItem={handleToggleListItem}

@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "deploy": "netlify deploy --build --prod",
     "docky:write": "node scripts/docky-write.js",
     "docky:cli": "node scripts/docky-cli.js"
   },

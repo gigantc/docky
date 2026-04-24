@@ -9,6 +9,7 @@ import {
 import {
   getFirestore,
   collection,
+  collectionGroup,
   addDoc,
   doc,
   updateDoc,
@@ -20,6 +21,7 @@ import {
   query as fsQuery,
   serverTimestamp,
   where,
+  writeBatch,
 } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -43,6 +45,7 @@ export {
   createUserWithEmailAndPassword,
   signOut,
   collection,
+  collectionGroup,
   addDoc,
   doc,
   updateDoc,
@@ -54,4 +57,5 @@ export {
   fsQuery,
   serverTimestamp,
   where,
+  writeBatch,
 }
