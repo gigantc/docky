@@ -10,6 +10,38 @@
   margin-bottom: 38px;
 }
 
+.brief-template__hero-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brief-template__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 180, 171, 0.35);
+  border-radius: 8px;
+  background: transparent;
+  color: #ffb4ab;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 180, 171, 0.08);
+    border-color: rgba(255, 180, 171, 0.55);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.5);
+  }
+}
+
 .brief-template__eyebrow,
 .brief-template__section-tag,
 .brief-template__weather-label,
@@ -24,9 +56,12 @@
 }
 
 .brief-template__eyebrow,
-.brief-template__highlight-kicker,
+.brief-template__highlight-kicker {
+  color: var(--primary);
+}
+
 .brief-template__apollo-label {
-  color: #4de082;
+  color: #bfc9c1;
 }
 
 .brief-template__hero h1 {
@@ -72,7 +107,7 @@
 .brief-template__weather-temp,
 .brief-template__moon-glyph {
   flex: 0 0 auto;
-  color: #4de082;
+  color: var(--primary);
   font: 600 clamp(2.75rem, 3.8vw, 4rem)/0.9 "Space Grotesk", "Inter", system-ui, sans-serif;
   letter-spacing: -0.04rem;
 }
@@ -107,12 +142,12 @@
   margin-top: 28px;
   max-width: 860px;
   padding: 16px 18px;
-  border-left: 3px solid #4de082;
-  background: rgba(77, 224, 130, 0.1);
+  border-left: 3px solid var(--primary);
+  background: rgba(var(--primary-rgb), 0.1);
 }
 
 .brief-template__moon-watch-label {
-  color: #4de082;
+  color: var(--primary);
 }
 
 .brief-template__moon-watch-body {
@@ -203,7 +238,14 @@
   letter-spacing: -0.03rem;
 }
 
-.brief-template__market-summary,
+.brief-template__market-summary {
+  margin-top: 22px;
+  max-width: 860px;
+  padding: 16px 18px;
+  background: rgba(var(--primary-rgb), 0.1);
+  border-left: 3px solid var(--primary);
+}
+
 .brief-template__compare-card {
   margin-top: 22px;
   padding: 20px 18px;
@@ -212,7 +254,7 @@
 }
 
 .brief-template__market-summary-label {
-  color: #bfc9c1;
+  color: var(--primary);
 }
 
 .brief-template__market-summary-body,
@@ -241,11 +283,11 @@
 }
 
 .brief-template__trend-card:hover {
-  border-color: rgba(77, 224, 130, 0.35);
+  border-color: rgba(var(--primary-rgb), 0.35);
 }
 
 .brief-template__trend-icon {
-  color: #4de082;
+  color: var(--primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -301,8 +343,8 @@
   margin-top: 42px;
   padding: 28px 24px;
   background: #2a2a2a;
-  border-top: 2px solid rgba(77, 224, 130, 0.35);
-  border-bottom: 2px solid rgba(77, 224, 130, 0.35);
+  border-top: 2px solid rgba(var(--primary-rgb), 0.35);
+  border-bottom: 2px solid rgba(var(--primary-rgb), 0.35);
 }
 
 .brief-template__apollo-grid {
@@ -329,7 +371,7 @@
 }
 
 .brief-template__source a {
-  color: #4de082;
+  color: var(--primary);
   text-decoration: none;
 }
 

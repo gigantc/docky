@@ -1,3 +1,4 @@
+import { Trash2 } from 'lucide-react'
 import './MorningBriefView.scss'
 import { getMorningBriefIcon } from '../../utils/morningBriefIcons'
 
@@ -60,7 +61,7 @@ function HighlightCard({ item }) {
   )
 }
 
-export default function MorningBriefView({ activeDoc, briefGreeting }) {
+export default function MorningBriefView({ activeDoc, briefGreeting, user, onDelete }) {
   const brief = activeDoc.briefData
   if (!brief) return null
 
@@ -75,7 +76,19 @@ export default function MorningBriefView({ activeDoc, briefGreeting }) {
   return (
     <article className="brief-template">
       <header className="brief-template__hero">
-        <p className="brief-template__eyebrow">{brief.title || 'Morning Brief'}</p>
+        <div className="brief-template__hero-row">
+          <p className="brief-template__eyebrow">{brief.title || 'Morning Brief'}</p>
+          {user && onDelete && (
+            <button
+              type="button"
+              className="brief-template__delete"
+              onClick={() => onDelete(activeDoc)}
+              aria-label="Delete brief"
+            >
+              <Trash2 size={16} aria-hidden="true" />
+            </button>
+          )}
+        </div>
         <h1>{heroGreeting}</h1>
         {brief.intro && <p className="brief-template__intro">"{brief.intro}"</p>}
       </header>

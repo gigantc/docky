@@ -56,6 +56,8 @@ export default function Viewer({
             activeDoc={activeDoc}
             briefGreeting={briefGreeting}
             briefCompare={briefCompare}
+            user={user}
+            onDelete={onDeleteDoc}
           />
         ) : (
           <DocumentView

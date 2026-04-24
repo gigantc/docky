@@ -5,7 +5,6 @@ const SECTION_IDS = [
   { key: 'markets', label: 'Markets' },
   { key: 'trends', label: 'Trending Topics' },
   { key: 'highlights', label: 'Topic Highlights' },
-  { key: 'help', label: 'Today I can help with...' },
 ]
 
 function countIndent(line) {
@@ -285,10 +284,6 @@ function normalizeBriefData(data = {}) {
   const weather = data.weather && typeof data.weather === 'object' ? data.weather : {}
   const moon = data.moon && typeof data.moon === 'object' ? data.moon : {}
   const markets = data.markets && typeof data.markets === 'object' ? data.markets : {}
-  const yesterdayVsToday = data.yesterday_vs_today && typeof data.yesterday_vs_today === 'object'
-    ? data.yesterday_vs_today
-    : {}
-
   return {
     template: String(data.template || 'morning-brief-v1').trim(),
     date: String(data.date || '').trim(),
@@ -319,15 +314,8 @@ function normalizeBriefData(data = {}) {
       instruments: normalizeInstruments(markets.instruments),
       summary: String(markets.summary || '').trim(),
     },
-    yesterdayVsToday: {
-      items: toArray(yesterdayVsToday.items || yesterdayVsToday.lines || yesterdayVsToday).map((item) => String(item).trim()).filter(Boolean),
-      sources: normalizeSources(yesterdayVsToday.sources),
-    },
     trends: normalizeItems(data.trends),
     highlights: normalizeItems(data.highlights),
-    help: toArray(data.help).map((item) => String(item).trim()).filter(Boolean),
-    tags: toArray(data.tags).map((item) => String(item).trim()).filter(Boolean),
-    outro: String(data.outro || '').trim(),
   }
 }
 
@@ -356,12 +344,11 @@ export function getMorningBriefOutline(briefData) {
     if (key === 'markets') return briefData.markets?.instruments?.length || briefData.markets?.summary
     if (key === 'trends') return briefData.trends?.length
     if (key === 'highlights') return briefData.highlights?.length
-    if (key === 'help') return briefData.help?.length
     return false
   }).map(({ key, label }) => ({
     level: 2,
     text: label,
-    id: key === 'help' ? 'today-i-can-help-with' : key === 'trends' ? 'trending-topics-roundup' : key === 'highlights' ? 'topic-highlights' : key,
+    id: key === 'trends' ? 'trending-topics-roundup' : key === 'highlights' ? 'topic-highlights' : key,
   }))
 }
 
@@ -436,8 +423,8 @@ export function serializeBriefData(briefData) {
       lines.push('  instruments:')
       briefData.markets.instruments.forEach((item) => {
         lines.push(`    - key: "${String(item.key).replace(/"/g, '\\"')}"`)
+        if (item.value !== null && item.value !== undefined) lines.push(`      value: ${item.value}`)
         if (item.valueDisplay) lines.push(`      value_display: "${String(item.valueDisplay).replace(/"/g, '\\"')}"`)
-        else if (item.value !== null && item.value !== undefined) lines.push(`      value: ${item.value}`)
         if (item.pct !== '') lines.push(`      pct: "${String(item.pct).replace(/"/g, '\\"')}"`)
         if (item.delta !== '') lines.push(`      delta: "${String(item.delta).replace(/"/g, '\\"')}"`)
         if (item.direction) lines.push(`      direction: "${String(item.direction).replace(/"/g, '\\"')}"`)
@@ -462,13 +449,6 @@ export function serializeBriefData(briefData) {
 
   pushItemList('trends', briefData.trends)
   pushItemList('highlights', briefData.highlights)
-
-  if (briefData.help?.length) {
-    lines.push('help:')
-    briefData.help.forEach((item) => {
-      lines.push(`  - "${String(item).replace(/"/g, '\\"')}"`)
-    })
-  }
 
   lines.push('---')
 
@@ -516,8 +496,5 @@ export function createEmptyMorningBrief(date = new Date()) {
     },
     trends: [],
     highlights: [],
-    help: [],
-    tags: [],
-    outro: '',
   }
 }

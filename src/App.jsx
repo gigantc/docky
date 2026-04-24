@@ -11,10 +11,12 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   fsQuery,
   serverTimestamp,
+  where,
 } from './firebase'
 import { extractInlineTags, uniqueTags } from './utils/tags'
 import { renderMarkdownWithOutline } from './utils/markdown'
@@ -43,6 +45,19 @@ import LoginPage from './components/LoginPage/LoginPage'
 
 const APP_VERSION = '0.2.1'
 const ARCHIVE_VIEWS = new Set(['notes', 'briefs', 'journals', 'lists'])
+const BRIEF_RETENTION_LIMIT = 8
+
+async function pruneOldBriefs() {
+  const briefsQuery = fsQuery(
+    collection(db, 'notes'),
+    where('type', '==', 'brief'),
+    orderBy('createdAt', 'desc'),
+  )
+  const snapshot = await getDocs(briefsQuery)
+  const overflow = snapshot.docs.slice(BRIEF_RETENTION_LIMIT)
+  if (overflow.length === 0) return
+  await Promise.all(overflow.map((snap) => deleteDoc(doc(db, 'notes', snap.id))))
+}
 
 const EMPTY_STATE_COPY = {
   notes: { title: 'No note selected', sub: 'Pick a note from the left, or create one.' },
@@ -74,6 +89,7 @@ export default function App() {
   const [locationId, setLocationId] = useState(() => localStorage.getItem('dock.location') || DEFAULT_LOCATION_ID)
   const [autoEditDocId, setAutoEditDocId] = useState(null)
   const appRef = useRef(null)
+  const briefsPrunedRef = useRef(false)
 
   useEffect(() => onAuthStateChanged(auth, (nextUser) => {
     setUser(nextUser)
@@ -134,12 +150,17 @@ export default function App() {
     if (!user) {
       setFirestoreDocs([])
       setDocsReady(false)
+      briefsPrunedRef.current = false
       return undefined
     }
 
     const notesQuery = fsQuery(collection(db, 'notes'), orderBy('updatedAt', 'desc'))
     return onSnapshot(notesQuery, (snapshot) => {
       setDocsReady(true)
+      if (!briefsPrunedRef.current) {
+        briefsPrunedRef.current = true
+        pruneOldBriefs().catch((err) => console.error('Brief prune (load) failed:', err))
+      }
       const nextDocs = snapshot.docs.map((snap) => {
         const data = snap.data() || {}
         const content = data.content || ''
@@ -233,6 +254,9 @@ export default function App() {
     setActivePath(`firestore:${type}/${docRef.id}`)
     setActiveListId(null)
     setView(type === 'brief' ? 'briefs' : type === 'journal' ? 'journals' : 'notes')
+    if (type === 'brief') {
+      pruneOldBriefs().catch((err) => console.error('Brief prune (create) failed:', err))
+    }
   }
 
   const handleCreateNote = () => createDocument('note')

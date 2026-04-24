@@ -14,10 +14,12 @@ import {
   updateDoc,
   setDoc,
   deleteDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query as fsQuery,
   serverTimestamp,
+  where,
 } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -46,8 +48,10 @@ export {
   updateDoc,
   setDoc,
   deleteDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   fsQuery,
   serverTimestamp,
+  where,
 }
